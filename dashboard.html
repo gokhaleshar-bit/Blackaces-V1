@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Black Aces FC — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#020408;--surface:#080d14;--surface2:#0d1520;--surface3:#111c2d;
+  --border:#1a2740;--border2:#243550;
+  --accent:#00ff88;--accent-dim:rgba(0,255,136,0.12);
+  --red:#ff3d5a;--red-dim:rgba(255,61,90,0.12);
+  --blue:#3d8bff;--yellow:#ffd166;--yellow-dim:rgba(255,209,102,0.1);
+  --text:#e8f0fe;--muted:#4a6080;--muted2:#7a90b0;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+  --ticker-h:36px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);}
+
+/* TICKER */
+.ticker-wrap{width:100%;height:var(--ticker-h);background:var(--surface);border-bottom:1px solid var(--border);overflow:hidden;display:flex;align-items:center;position:sticky;top:0;z-index:100;}
+.ticker-label{flex-shrink:0;padding:0 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.15em;color:var(--accent);text-transform:uppercase;border-right:1px solid var(--border);height:100%;display:flex;align-items:center;background:var(--surface2);}
+.ticker-track{flex:1;overflow:hidden;}
+.ticker-inner{display:flex;white-space:nowrap;animation:ticker-scroll 25s linear infinite;}
+.ticker-inner:hover{animation-play-state:paused;}
+@keyframes ticker-scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.ticker-item{display:inline-flex;align-items:center;gap:8px;padding:0 20px;font-family:var(--mono);font-size:11px;border-right:1px solid var(--border);height:var(--ticker-h);cursor:default;}
+.ticker-item:hover{background:var(--surface2);}
+.ticker-name{font-weight:700;color:var(--text);letter-spacing:.05em;}
+.up{color:var(--accent);}.dn{color:var(--red);}.fl{color:var(--muted2);}
+
+/* HEADER */
+header{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;border-bottom:1px solid var(--border);background:var(--surface);}
+.logo-group{display:flex;align-items:center;gap:12px;}
+.logo-badge{width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#003320,#00ff88);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;font-size:12px;color:#000;}
+.logo-text h1{font-family:var(--mono);font-size:15px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;}
+.logo-text span{font-size:9px;color:var(--muted2);font-family:var(--mono);letter-spacing:.08em;}
+.header-meta{display:flex;align-items:center;gap:14px;}
+.live-dot{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:.1em;}
+.dot-pulse{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.header-time{font-family:var(--mono);font-size:10px;color:var(--muted2);}
+.nav-tabs{display:flex;gap:3px;}
+.nav-tab{padding:5px 12px;border-radius:5px;border:1px solid transparent;background:transparent;color:var(--muted2);font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:all .15s;}
+.nav-tab.active{border-color:var(--accent);color:var(--accent);background:var(--accent-dim);}
+.nav-tab:hover:not(.active){border-color:var(--border2);color:var(--text);}
+
+/* LAYOUT */
+.main{max-width:1200px;margin:0 auto;padding:18px;}
+.view{display:none;}.view.active{display:block;}
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+@media(max-width:700px){.stat-row{grid-template-columns:repeat(2,1fr);}}
+.g2{display:grid;grid-template-columns:1.3fr 1fr;gap:12px;margin-bottom:12px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;}
+@media(max-width:800px){.g2,.g3{grid-template-columns:1fr;}}
+.col-stack{display:flex;flex-direction:column;gap:12px;}
+
+/* STAT CARD */
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:13px 15px;animation:fadeUp .4s ease both;position:relative;overflow:hidden;}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);}
+.sc.red::before{background:var(--red);}
+.sc.blue::before{background:var(--blue);}
+.sc.yellow::before{background:var(--yellow);}
+.sc.muted::before{background:var(--muted);}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.sc-label{font-family:var(--mono);font-size:9px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;margin-bottom:7px;}
+.sc-val{font-family:var(--mono);font-weight:700;font-size:26px;color:var(--accent);line-height:1;}
+.sc.red .sc-val{color:var(--red);}.sc.blue .sc-val{color:var(--blue);}.sc.yellow .sc-val{color:var(--yellow);}.sc.muted .sc-val{color:var(--muted2);}
+.sc-sub{font-size:10px;color:var(--muted2);margin-top:4px;font-family:var(--mono);}
+
+/* PANEL */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;animation:fadeUp .4s ease both;}
+.phdr{padding:9px 15px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface2);}
+.ptitle{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted2);}
+.pbadge{font-family:var(--mono);font-size:9px;padding:2px 8px;border-radius:3px;}
+.pbadge.g{background:var(--accent-dim);color:var(--accent);}
+.pbadge.r{background:var(--red-dim);color:var(--red);}
+.pbody{padding:13px 15px;}
+.pbody.np{padding:0;}
+
+/* LEADERBOARD */
+.lb-row{display:flex;align-items:center;gap:10px;padding:10px 15px;border-bottom:1px solid var(--border);transition:background .1s;animation:fadeUp .3s ease both;}
+.lb-row:last-child{border-bottom:none;}
+.lb-row:hover{background:var(--surface2);}
+.lb-rank{font-family:var(--mono);font-weight:700;font-size:14px;color:var(--muted);width:24px;text-align:center;flex-shrink:0;}
+.lb-rank.g{color:var(--yellow);}.lb-rank.s{color:#94a3b8;}.lb-rank.b{color:#cd7c2f;}
+.lb-info{flex:1;}
+.lb-name{font-family:var(--mono);font-weight:700;font-size:14px;text-transform:uppercase;letter-spacing:.04em;}
+.lb-meta{font-size:9px;color:var(--muted2);font-family:var(--mono);margin-top:2px;}
+.lb-right{display:flex;align-items:center;gap:10px;}
+.lb-score{font-family:var(--mono);font-weight:700;font-size:18px;}
+.lb-bar-w{width:60px;height:3px;background:var(--border);border-radius:2px;}
+.lb-bar{height:100%;border-radius:2px;background:linear-gradient(90deg,#003320,var(--accent));}
+.chg{font-family:var(--mono);font-size:9px;padding:2px 5px;border-radius:3px;}
+.chg.up{background:var(--accent-dim);color:var(--accent);}
+.chg.dn{background:var(--red-dim);color:var(--red);}
+.chg.fl{background:rgba(255,255,255,.05);color:var(--muted2);}
+.pos-pill{display:inline-block;padding:1px 5px;border-radius:3px;font-size:8px;font-weight:700;background:var(--surface3);margin-left:4px;}
+
+/* VOTE CHIPS */
+.vote-chips{display:flex;flex-wrap:wrap;gap:6px;padding:13px 15px;}
+.vc{padding:3px 9px;border-radius:3px;font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border:1px solid;}
+.vc.voted{border-color:var(--accent);color:var(--accent);background:var(--accent-dim);}
+.vc.pending{border-color:var(--border2);color:var(--muted);background:transparent;}
+
+/* RESULT */
+.result-big{text-align:center;padding:20px;display:flex;flex-direction:column;align-items:center;gap:6px;}
+.res-emoji{font-size:42px;}
+.res-word{font-family:var(--mono);font-weight:700;font-size:22px;letter-spacing:.1em;}
+.res-sub{font-family:var(--mono);font-size:9px;color:var(--muted2);}
+
+/* GAME ROW */
+.game-row{padding:9px 15px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:11px;}
+.game-row:last-child{border-bottom:none;}
+.g-date{color:var(--muted2);width:60px;flex-shrink:0;font-size:9px;}
+.rp{padding:2px 7px;border-radius:3px;font-weight:700;font-size:9px;flex-shrink:0;}
+.rp.W{background:var(--accent-dim);color:var(--accent);}
+.rp.L{background:var(--red-dim);color:var(--red);}
+.rp.D{background:var(--yellow-dim);color:var(--yellow);}
+
+/* FLAG ROW */
+.flag-row{padding:9px 15px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:9px;}
+.flag-row:last-child{border-bottom:none;}
+.fi{font-size:13px;flex-shrink:0;margin-top:1px;}
+.ft{font-family:var(--mono);font-size:10px;line-height:1.6;color:var(--muted2);}
+.ft b{color:var(--text);}
+
+/* TABLE */
+.at{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11px;}
+.at th{text-align:left;padding:7px 12px;color:var(--muted);font-size:9px;letter-spacing:.12em;text-transform:uppercase;border-bottom:1px solid var(--border);font-weight:600;}
+.at td{padding:8px 12px;border-bottom:1px solid var(--border);}
+.at tr:last-child td{border-bottom:none;}
+.at tr:hover td{background:var(--surface2);}
+
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+@media(max-width:600px){.main{padding:10px;}header{padding:8px 12px;}.nav-tabs{display:none;}}
+</style>
+</head>
+<body>
+
+<!-- TICKER -->
+<div class="ticker-wrap">
+  <div class="ticker-label">⚽ BA·LIVE</div>
+  <div class="ticker-track"><div class="ticker-inner" id="tickerInner"></div></div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo-group">
+    <div class="logo-badge">BA</div>
+    <div class="logo-text">
+      <h1>Black Aces FC</h1>
+      <span>PLAYER RATINGS EXCHANGE · TEST MODE</span>
+    </div>
+  </div>
+  <div class="header-meta">
+    <div class="live-dot"><div class="dot-pulse"></div>LIVE</div>
+    <div class="header-time" id="clockEl">--:--:-- IST</div>
+  </div>
+  <nav class="nav-tabs">
+    <button class="nav-tab active" onclick="showView('weekly',this)">This Week</button>
+    <button class="nav-tab" onclick="showView('alltime',this)">All Time</button>
+    <button class="nav-tab" onclick="showView('audit',this)">Audit</button>
+  </nav>
+</header>
+
+<div class="main">
+
+<!-- WEEKLY -->
+<div class="view active" id="view-weekly">
+  <div class="stat-row" id="wStats"></div>
+  <div class="g2">
+    <div class="panel">
+      <div class="phdr"><div class="ptitle">⭐ Weekly Performance Index</div><div class="pbadge g" id="wkLabel">—</div></div>
+      <div class="pbody np" id="wLb"></div>
+    </div>
+    <div class="col-stack">
+      <div class="panel">
+        <div class="phdr"><div class="ptitle">⚽ Match Result</div></div>
+        <div class="result-big" id="resultBox"><div class="res-emoji">–</div><div class="res-word" style="color:var(--muted2)">NO DATA</div><div class="res-sub">Waiting for votes</div></div>
+      </div>
+      <div class="panel">
+        <div class="phdr"><div class="ptitle">🗳️ Vote Tracker</div><div class="pbadge r" id="vtBadge">0/3</div></div>
+        <div id="vChips"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ALL TIME -->
+<div class="view" id="view-alltime">
+  <div class="stat-row" id="atStats"></div>
+  <div class="g2">
+    <div class="panel">
+      <div class="phdr"><div class="ptitle">🏆 All-Time Leaderboard</div><div class="pbadge g">SEASON 2025</div></div>
+      <div class="pbody np" id="atLb"></div>
+    </div>
+    <div class="col-stack">
+      <div class="panel">
+        <div class="phdr"><div class="ptitle">📅 Recent Games</div></div>
+        <div id="recentGames"><div style="padding:20px 15px;font-family:var(--mono);font-size:11px;color:var(--muted)">No games recorded yet.</div></div>
+      </div>
+      <div class="panel">
+        <div class="phdr"><div class="ptitle">📊 Season Record</div></div>
+        <div class="pbody" id="recordPanel"><div style="font-family:var(--mono);font-size:11px;color:var(--muted)">No data yet.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AUDIT -->
+<div class="view" id="view-audit">
+  <div class="stat-row" id="auStats"></div>
+  <div class="g2">
+    <div class="panel">
+      <div class="phdr"><div class="ptitle">⚠️ Flagged Votes This Week</div><div class="pbadge g" id="flagCount">0 flags</div></div>
+      <div id="flagsList"><div style="padding:20px 15px;font-family:var(--mono);font-size:11px;color:var(--muted)">No flags detected.</div></div>
+    </div>
+    <div class="panel">
+      <div class="phdr"><div class="ptitle">📋 Audit Log</div></div>
+      <div id="auditLog"><div style="padding:20px 15px;font-family:var(--mono);font-size:11px;color:var(--muted)">No audit entries yet.</div></div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ============================================================
+// ✅ PRE-FILLED — Shardul, Swakeet, Kavan (Test Mode)
+// Only change SCRIPT_URL — paste your Apps Script URL below
+// ============================================================
+const SCRIPT_URL = "PASTE_YOUR_SCRIPT_URL_HERE";
+
+const PLAYERS = [
+  { name: "Shardul", pos: "MID" },
+  { name: "Swakeet", pos: "DEF" },
+  { name: "Kavan",   pos: "FWD" },
+];
+
+const POS_COL = { GK:"#ffd166", DEF:"#3d8bff", MID:"#00ff88", FWD:"#ff3d5a" };
+
+function clock(){
+  document.getElementById("clockEl").textContent =
+    new Date().toLocaleTimeString("en-IN",{hour12:false,timeZone:"Asia/Kolkata"})+" IST";
+}
+setInterval(clock,1000); clock();
+
+function buildTicker(leaderboard){
+  // Use real all-time ratings if available, otherwise show placeholder line
+  const source = (leaderboard && leaderboard.length)
+    ? leaderboard.map(p => ({ name: p.name, rating: p.avg, delta: p.delta || 0 }))
+    : PLAYERS.map(p => ({ name: p.name, rating: null, delta: 0 }));
+  const items = source.map(p => {
+    if (p.rating === null) {
+      return `<div class="ticker-item">
+        <span class="ticker-name">${p.name.toUpperCase()}</span>
+        <span class="fl">—</span>
+        <span style="font-size:10px" class="fl">no data</span>
+      </div>`;
+    }
+    const up = p.delta > 0, dn = p.delta < 0;
+    const cls = up ? "up" : dn ? "dn" : "fl";
+    const arrow = up ? "▲" : dn ? "▼" : "–";
+    return `<div class="ticker-item">
+      <span class="ticker-name">${p.name.toUpperCase()}</span>
+      <span class="${cls}">${p.rating.toFixed(2)}</span>
+      <span style="font-size:10px" class="${cls}">${arrow}${Math.abs(p.delta).toFixed(2)}</span>
+    </div>`;
+  }).join("");
+  document.getElementById("tickerInner").innerHTML = items+items;
+}
+
+function showView(id, btn){
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  document.querySelectorAll(".nav-tab").forEach(t=>t.classList.remove("active"));
+  document.getElementById("view-"+id).classList.add("active");
+  btn.classList.add("active");
+}
+
+async function loadData(){
+  try {
+    const res = await fetch(SCRIPT_URL + "?action=getDashboard");
+    const data = await res.json();
+    renderWeekly(data.thisWeek);
+    renderAllTime(data.allTime);
+    renderAudit(data.audit);
+    buildTicker(data.allTime && data.allTime.leaderboard);
+  } catch(e) {
+    console.error("Dashboard load failed:", e);
+    renderEmpty();
+    buildTicker(null);
+  }
+}
+
+function renderEmpty(){
+  document.getElementById("wStats").innerHTML = `
+    <div class="sc" style="animation-delay:0s"><div class="sc-label">Votes Cast</div><div class="sc-val">0/3</div><div class="sc-sub">no votes yet</div></div>
+    <div class="sc" style="animation-delay:.05s"><div class="sc-label">Avg Rating</div><div class="sc-val">—</div><div class="sc-sub">no data</div></div>
+    <div class="sc" style="animation-delay:.1s"><div class="sc-label">MVP</div><div class="sc-val" style="font-size:16px">—</div><div class="sc-sub">no data</div></div>
+    <div class="sc muted" style="animation-delay:.15s"><div class="sc-label">Pending</div><div class="sc-val">3</div><div class="sc-sub">all players</div></div>`;
+  document.getElementById("wLb").innerHTML=`<div style="padding:30px 15px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--muted)">No votes submitted yet.<br/>Share the voting link to get started.</div>`;
+  document.getElementById("vChips").innerHTML=`<div class="vote-chips">${PLAYERS.map(p=>`<span class="vc pending">${p.name}</span>`).join("")}</div>`;
+}
+
+function renderWeekly(d){
+  if (!d) { renderEmpty(); return; }
+  document.getElementById("wkLabel").textContent = d.weekLabel || "—";
+  const top = d.ratings && d.ratings[0];
+  document.getElementById("wStats").innerHTML=`
+    <div class="sc" style="animation-delay:0s"><div class="sc-label">Votes Cast</div><div class="sc-val">${d.totalVoters}/${d.totalPlayers}</div><div class="sc-sub">${Math.round(d.totalVoters/d.totalPlayers*100)}% done</div></div>
+    <div class="sc" style="animation-delay:.05s"><div class="sc-label">Avg Rating</div><div class="sc-val">${d.avgRating?d.avgRating.toFixed(1):"—"}</div><div class="sc-sub">out of 5.0</div></div>
+    <div class="sc" style="animation-delay:.1s"><div class="sc-label">MVP This Week</div><div class="sc-val" style="font-size:16px">${top?top.name:"—"}</div><div class="sc-sub">${top?top.avg.toFixed(1)+" ⭐":"no data"}</div></div>
+    <div class="sc ${d.matchResult==="Win"?"":"red"}" style="animation-delay:.15s"><div class="sc-label">Result</div><div class="sc-val" style="font-size:18px">${d.matchResult==="Win"?"WIN":d.matchResult==="Loss"?"LOSS":d.matchResult==="Draw"?"DRAW":"—"}</div><div class="sc-sub">this week</div></div>`;
+
+  const medals=["🥇","🥈","🥉"];
+  document.getElementById("wLb").innerHTML = d.ratings && d.ratings.length
+    ? d.ratings.map((p,i)=>`<div class="lb-row" style="animation-delay:${i*.06}s">
+        <div class="lb-rank ${i===0?"g":i===1?"s":i===2?"b":""}">${medals[i]||i+1}</div>
+        <div class="lb-info">
+          <div class="lb-name">${p.name}<span class="pos-pill" style="color:${POS_COL[PLAYERS.find(x=>x.name===p.name)?.pos]||"#fff"}">${PLAYERS.find(x=>x.name===p.name)?.pos||""}</span></div>
+          <div class="lb-meta">${p.votes} votes</div>
+        </div>
+        <div class="lb-right">
+          <div class="lb-score up">${p.avg.toFixed(1)}</div>
+          <div class="lb-bar-w" style="margin-top:4px"><div class="lb-bar" style="width:${p.avg/5*100}%"></div></div>
+        </div>
+      </div>`).join("")
+    : `<div style="padding:30px 15px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--muted)">No votes yet.</div>`;
+
+  const rm={Win:["🏆","WE WON","var(--accent)"],Loss:["❌","WE LOST","var(--red)"],Draw:["🤝","DRAW","var(--yellow)"]};
+  const [em,wd,col]=rm[d.matchResult]||["–","NO DATA","var(--muted2)"];
+  document.getElementById("resultBox").innerHTML=`<div class="res-emoji">${em}</div><div class="res-word" style="color:${col}">${wd}</div><div class="res-sub">${d.weekLabel||""}</div>`;
+
+  const votedSet = new Set(d.voted||[]);
+  document.getElementById("vChips").innerHTML=`<div class="vote-chips">${PLAYERS.map(p=>`<span class="vc ${votedSet.has(p.name)?"voted":"pending"}">${votedSet.has(p.name)?"✓ ":""}${p.name}</span>`).join("")}</div>`;
+  document.getElementById("vtBadge").textContent=`${d.totalVoters}/${d.totalPlayers}`;
+  document.getElementById("vtBadge").className=`pbadge ${d.totalVoters===d.totalPlayers?"g":"r"}`;
+}
+
+function renderAllTime(d){
+  if (!d) return;
+  const winPct = d.totalGames ? Math.round(d.wins/d.totalGames*100) : 0;
+  document.getElementById("atStats").innerHTML=`
+    <div class="sc" style="animation-delay:0s"><div class="sc-label">Games Played</div><div class="sc-val">${d.totalGames}</div><div class="sc-sub">season total</div></div>
+    <div class="sc" style="animation-delay:.05s"><div class="sc-label">Win Rate</div><div class="sc-val">${winPct}%</div><div class="sc-sub">${d.wins}W ${d.draws}D ${d.losses}L</div></div>
+    <div class="sc" style="animation-delay:.1s"><div class="sc-label">Total Votes</div><div class="sc-val">${d.totalVotesCast}</div><div class="sc-sub">all time</div></div>
+    <div class="sc" style="animation-delay:.15s"><div class="sc-label">Season MVP</div><div class="sc-val" style="font-size:16px">${d.leaderboard&&d.leaderboard[0]?d.leaderboard[0].name:"—"}</div><div class="sc-sub">${d.leaderboard&&d.leaderboard[0]?d.leaderboard[0].avg.toFixed(1)+" ⭐":"no data"}</div></div>`;
+
+  const medals=["🥇","🥈","🥉"];
+  const ti={up:"<span class='up'>▲</span>",down:"<span class='dn'>▼</span>",flat:"<span class='fl'>–</span>"};
+  document.getElementById("atLb").innerHTML = d.leaderboard && d.leaderboard.length
+    ? d.leaderboard.map((p,i)=>`<div class="lb-row" style="animation-delay:${i*.06}s">
+        <div class="lb-rank ${i===0?"g":i===1?"s":i===2?"b":""}">${medals[i]||i+1}</div>
+        <div class="lb-info">
+          <div class="lb-name">${p.name}<span class="pos-pill" style="color:${POS_COL[PLAYERS.find(x=>x.name===p.name)?.pos]||"#fff"}">${PLAYERS.find(x=>x.name===p.name)?.pos||""}</span></div>
+          <div class="lb-meta">${p.games} games ${ti[p.trend]||""}</div>
+        </div>
+        <div class="lb-right">
+          <div class="lb-score up">${p.avg.toFixed(1)}</div>
+          <div class="lb-bar-w" style="margin-top:4px"><div class="lb-bar" style="width:${p.avg/5*100}%"></div></div>
+        </div>
+      </div>`).join("")
+    : `<div style="padding:30px 15px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--muted)">No data yet.</div>`;
+
+  // Recent Games panel
+  const games = d.recentGames || [];
+  document.getElementById("recentGames").innerHTML = games.length
+    ? games.map(g => {
+        const r = g.result === "Win" ? "W" : g.result === "Loss" ? "L" : g.result === "Draw" ? "D" : "?";
+        const dateStr = g.date ? new Date(g.date).toLocaleDateString("en-IN",{day:"2-digit",month:"short"}) : g.weekKey;
+        return `<div class="game-row">
+          <span class="g-date">${dateStr}</span>
+          <span class="rp ${r}">${r}</span>
+          <span style="color:var(--muted2);font-size:10px">${g.weekKey}</span>
+          <span style="margin-left:auto;color:var(--muted);font-size:10px">${g.voterCount} voted</span>
+        </div>`;
+      }).join("")
+    : `<div style="padding:20px 15px;font-family:var(--mono);font-size:11px;color:var(--muted)">No games recorded yet.</div>`;
+
+  // Season Record panel — bar chart of W / D / L
+  const tot = (d.totalGames || 0) || 1;
+  const wPct = (d.wins   / tot) * 100;
+  const dPct = (d.draws  / tot) * 100;
+  const lPct = (d.losses / tot) * 100;
+  document.getElementById("recordPanel").innerHTML = d.totalGames
+    ? `<div style="font-family:var(--mono);font-size:11px;display:flex;flex-direction:column;gap:10px">
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:4px">
+            <span>WINS</span><span class="up">${d.wins} (${wPct.toFixed(0)}%)</span>
+          </div>
+          <div class="lb-bar-w" style="width:100%"><div class="lb-bar" style="width:${wPct}%"></div></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:4px">
+            <span>DRAWS</span><span style="color:var(--yellow)">${d.draws} (${dPct.toFixed(0)}%)</span>
+          </div>
+          <div class="lb-bar-w" style="width:100%"><div class="lb-bar" style="width:${dPct}%;background:linear-gradient(90deg,#3a2c0c,var(--yellow))"></div></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:4px">
+            <span>LOSSES</span><span class="dn">${d.losses} (${lPct.toFixed(0)}%)</span>
+          </div>
+          <div class="lb-bar-w" style="width:100%"><div class="lb-bar" style="width:${lPct}%;background:linear-gradient(90deg,#3a0c1a,var(--red))"></div></div>
+        </div>
+      </div>`
+    : `<div style="font-family:var(--mono);font-size:11px;color:var(--muted)">No data yet.</div>`;
+}
+
+function renderAudit(d){
+  if (!d) return;
+
+  // Audit summary stats
+  const flagsN = (d.flags || []).length;
+  const logN   = (d.log   || []).length;
+  document.getElementById("auStats").innerHTML = `
+    <div class="sc ${flagsN ? "red" : ""}" style="animation-delay:0s">
+      <div class="sc-label">Flags This Week</div>
+      <div class="sc-val">${flagsN}</div>
+      <div class="sc-sub">${flagsN ? "needs review" : "all clean"}</div>
+    </div>
+    <div class="sc blue" style="animation-delay:.05s">
+      <div class="sc-label">Audit Entries</div>
+      <div class="sc-val">${logN}</div>
+      <div class="sc-sub">recent actions</div>
+    </div>
+    <div class="sc yellow" style="animation-delay:.1s">
+      <div class="sc-label">Bias Threshold</div>
+      <div class="sc-val">±1.5</div>
+      <div class="sc-sub">deviation from avg</div>
+    </div>
+    <div class="sc muted" style="animation-delay:.15s">
+      <div class="sc-label">Week</div>
+      <div class="sc-val" style="font-size:16px">${d.weekKey || "—"}</div>
+      <div class="sc-sub">current</div>
+    </div>`;
+
+  // Flagged votes
+  document.getElementById("flagCount").textContent = `${flagsN} flag${flagsN === 1 ? "" : "s"}`;
+  document.getElementById("flagCount").className = `pbadge ${flagsN ? "r" : "g"}`;
+  document.getElementById("flagsList").innerHTML = flagsN
+    ? d.flags.map(f => `<div class="flag-row">
+        <span class="fi">⚠️</span>
+        <div class="ft"><b>${f.voter}</b> rated <b>${f.rated}</b> = <b>${f.given}</b><br/>
+        Group avg: ${f.avg.toFixed(1)} · Deviation: <b>${f.dev.toFixed(1)}</b></div>
+      </div>`).join("")
+    : `<div style="padding:20px 15px;font-family:var(--mono);font-size:11px;color:var(--muted)">No flags detected. ✅</div>`;
+
+  // Audit log
+  document.getElementById("auditLog").innerHTML = logN
+    ? `<table class="at">
+        <thead><tr><th>When</th><th>Week</th><th>Action</th><th>Detail</th><th>By</th></tr></thead>
+        <tbody>${d.log.map(e => {
+          const when = e.ts ? new Date(e.ts).toLocaleString("en-IN",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}) : "—";
+          return `<tr>
+            <td style="color:var(--muted2)">${when}</td>
+            <td>${e.weekKey || "—"}</td>
+            <td><b>${e.action || ""}</b></td>
+            <td style="color:var(--muted2)">${e.detail || ""}</td>
+            <td>${e.by || ""}</td>
+          </tr>`;
+        }).join("")}</tbody>
+      </table>`
+    : `<div style="padding:20px 15px;font-family:var(--mono);font-size:11px;color:var(--muted)">No audit entries yet.</div>`;
+}
+
+buildTicker(null);     // placeholder line until first fetch resolves
+loadData();
+// Re-fetch every 60s so the dashboard stays live
+setInterval(loadData, 60000);
+</script>
+</body>
+</html>
