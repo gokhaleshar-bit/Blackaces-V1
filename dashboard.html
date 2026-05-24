@@ -295,7 +295,7 @@ const data = { thisWeek: weekly, allTime: allTime, audit: audit };
     renderWeekly(data.thisWeek);
     renderAllTime(data.allTime);
     renderAudit(data.audit);
-    buildTicker(data.allTime && data.allTime.leaderboard);
+    buildTicker(data.allTime && data.allTime.players);
   } catch(e) {
     console.error("Dashboard load failed:", e);
     renderEmpty();
