@@ -285,8 +285,13 @@ function showView(id, btn){
 
 async function loadData(){
   try {
-    const res = await fetch(SCRIPT_URL + "?action=getDashboard");
-    const data = await res.json();
+    const res = await fetch(SCRIPT_URL);
+const weekly = await res.json();
+const allTimeRes = await fetch(SCRIPT_URL + "?action=alltime");
+const allTime = await allTimeRes.json();
+const auditRes = await fetch(SCRIPT_URL + "?action=audit");
+const audit = await auditRes.json();
+const data = { thisWeek: weekly, allTime: allTime, audit: audit };
     renderWeekly(data.thisWeek);
     renderAllTime(data.allTime);
     renderAudit(data.audit);
