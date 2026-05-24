@@ -315,14 +315,14 @@ function renderEmpty(){
 
 function renderWeekly(d){
   if (!d) { renderEmpty(); return; }
-  document.getElementById("wkLabel").textContent = d.weekLabel || "—";
-  const top = d.ratings && d.ratings[0];
+  document.getElementById("wkLabel").textContent = d.weekKey || "—";
+  const top = d.players && d.players[0];
+  const avgRating = d.players && d.players.length ? (d.players.reduce((s,p)=>s+p.avg,0)/d.players.length) : null;
   document.getElementById("wStats").innerHTML=`
-    <div class="sc" style="animation-delay:0s"><div class="sc-label">Votes Cast</div><div class="sc-val">${d.totalVoters}/${d.totalPlayers}</div><div class="sc-sub">${Math.round(d.totalVoters/d.totalPlayers*100)}% done</div></div>
-    <div class="sc" style="animation-delay:.05s"><div class="sc-label">Avg Rating</div><div class="sc-val">${d.avgRating?d.avgRating.toFixed(1):"—"}</div><div class="sc-sub">out of 5.0</div></div>
+    <div class="sc" style="animation-delay:0s"><div class="sc-label">Votes Cast</div><div class="sc-val">${d.totalVoters}/${d.expectedVoters}</div><div class="sc-sub">${d.expectedVoters?Math.round(d.totalVoters/d.expectedVoters*100):0}% done</div></div>
+    <div class="sc" style="animation-delay:.05s"><div class="sc-label">Avg Rating</div><div class="sc-val">${avgRating?avgRating.toFixed(1):"—"}</div><div class="sc-sub">out of 5.0</div></div>
     <div class="sc" style="animation-delay:.1s"><div class="sc-label">MVP This Week</div><div class="sc-val" style="font-size:16px">${top?top.name:"—"}</div><div class="sc-sub">${top?top.avg.toFixed(1)+" ⭐":"no data"}</div></div>
     <div class="sc ${d.matchResult==="Win"?"":"red"}" style="animation-delay:.15s"><div class="sc-label">Result</div><div class="sc-val" style="font-size:18px">${d.matchResult==="Win"?"WIN":d.matchResult==="Loss"?"LOSS":d.matchResult==="Draw"?"DRAW":"—"}</div><div class="sc-sub">this week</div></div>`;
-
   const medals=["🥇","🥈","🥉"];
   document.getElementById("wLb").innerHTML = d.ratings && d.ratings.length
     ? d.ratings.map((p,i)=>`<div class="lb-row" style="animation-delay:${i*.06}s">
