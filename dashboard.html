@@ -324,12 +324,12 @@ function renderWeekly(d){
     <div class="sc" style="animation-delay:.1s"><div class="sc-label">MVP This Week</div><div class="sc-val" style="font-size:16px">${top?top.name:"—"}</div><div class="sc-sub">${top?top.avg.toFixed(1)+" ⭐":"no data"}</div></div>
     <div class="sc ${d.matchResult==="Win"?"":"red"}" style="animation-delay:.15s"><div class="sc-label">Result</div><div class="sc-val" style="font-size:18px">${d.matchResult==="Win"?"WIN":d.matchResult==="Loss"?"LOSS":d.matchResult==="Draw"?"DRAW":"—"}</div><div class="sc-sub">this week</div></div>`;
   const medals=["🥇","🥈","🥉"];
-  document.getElementById("wLb").innerHTML = d.ratings && d.ratings.length
-    ? d.ratings.map((p,i)=>`<div class="lb-row" style="animation-delay:${i*.06}s">
+  document.getElementById("wLb").innerHTML = d.players && d.players.length
+    ? d.players.map((p,i)=>`<div class="lb-row" style="animation-delay:${i*.06}s">
         <div class="lb-rank ${i===0?"g":i===1?"s":i===2?"b":""}">${medals[i]||i+1}</div>
         <div class="lb-info">
           <div class="lb-name">${p.name}<span class="pos-pill" style="color:${POS_COL[PLAYERS.find(x=>x.name===p.name)?.pos]||"#fff"}">${PLAYERS.find(x=>x.name===p.name)?.pos||""}</span></div>
-          <div class="lb-meta">${p.votes} votes</div>
+          <div class="lb-meta">${p.count} votes</div>
         </div>
         <div class="lb-right">
           <div class="lb-score up">${p.avg.toFixed(1)}</div>
@@ -337,17 +337,14 @@ function renderWeekly(d){
         </div>
       </div>`).join("")
     : `<div style="padding:30px 15px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--muted)">No votes yet.</div>`;
-
   const rm={Win:["🏆","WE WON","var(--accent)"],Loss:["❌","WE LOST","var(--red)"],Draw:["🤝","DRAW","var(--yellow)"]};
   const [em,wd,col]=rm[d.matchResult]||["–","NO DATA","var(--muted2)"];
-  document.getElementById("resultBox").innerHTML=`<div class="res-emoji">${em}</div><div class="res-word" style="color:${col}">${wd}</div><div class="res-sub">${d.weekLabel||""}</div>`;
-
-  const votedSet = new Set(d.voted||[]);
+  document.getElementById("resultBox").innerHTML=`<div class="res-emoji">${em}</div><div class="res-word" style="color:${col}">${wd}</div><div class="res-sub">${d.weekKey||""}</div>`;
+  const votedSet = new Set(d.voters||[]);
   document.getElementById("vChips").innerHTML=`<div class="vote-chips">${PLAYERS.map(p=>`<span class="vc ${votedSet.has(p.name)?"voted":"pending"}">${votedSet.has(p.name)?"✓ ":""}${p.name}</span>`).join("")}</div>`;
-  document.getElementById("vtBadge").textContent=`${d.totalVoters}/${d.totalPlayers}`;
-  document.getElementById("vtBadge").className=`pbadge ${d.totalVoters===d.totalPlayers?"g":"r"}`;
+  document.getElementById("vtBadge").textContent=`${d.totalVoters}/${d.expectedVoters}`;
+  document.getElementById("vtBadge").className=`pbadge ${d.totalVoters===d.expectedVoters?"g":"r"}`;
 }
-
 function renderAllTime(d){
   if (!d) return;
   const winPct = d.totalGames ? Math.round(d.wins/d.totalGames*100) : 0;
