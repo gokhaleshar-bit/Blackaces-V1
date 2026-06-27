@@ -57,8 +57,6 @@ main{padding:20px 24px;max-width:1400px;margin:0 auto;}
 .pbadge{font-family:var(--mono);font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;}
 .pbadge.g{background:var(--accent-dim);color:var(--accent);}
 .pbadge.r{background:var(--red-dim);color:var(--red);}
-.pbody{padding:0;}
-.pbody.np{padding:0;}
 
 .lb-row{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--border);transition:background .15s;}
 .lb-row:last-child{border-bottom:none;}
@@ -85,7 +83,7 @@ main{padding:20px 24px;max-width:1400px;margin:0 auto;}
 .view{display:none;}
 .view.active{display:block;}
 
-/* Analytics panel */
+/* Analytics */
 .analytics-tabs{display:flex;border-bottom:1px solid var(--border);}
 .atab{flex:1;padding:10px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;text-align:center;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;transition:all .2s;}
 .atab.active{color:var(--accent);border-bottom-color:var(--accent);}
@@ -95,17 +93,26 @@ main{padding:20px 24px;max-width:1400px;margin:0 auto;}
 .form-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);}
 .form-row:last-child{border-bottom:none;}
 .form-name{font-family:var(--mono);font-size:12px;font-weight:600;}
-.form-arrow{font-size:14px;font-weight:700;}
 .form-delta{font-family:var(--mono);font-size:11px;font-weight:600;}
 .hot{color:var(--accent);}
 .cold{color:var(--red);}
 .neutral{color:var(--muted2);}
+
+.improved-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;}
+.improved-label{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.improved-name{font-family:var(--mono);font-size:16px;font-weight:700;color:var(--accent);margin-bottom:2px;}
+.improved-sub{font-size:11px;color:var(--muted2);}
+.improved-divider{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;}
+.improved-stat{text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:8px;}
+.improved-stat-val{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--accent);}
+.improved-stat-label{font-size:9px;color:var(--muted);margin-top:2px;}
 
 .team-compare{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
 .team-box{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;}
 .team-box-name{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
 .team-box-avg{font-family:var(--mono);font-size:24px;font-weight:700;color:var(--accent);}
 .team-box-sub{font-size:10px;color:var(--muted2);margin-top:4px;}
+.team-winner{border-color:var(--accent);}
 
 .voter-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);}
 .voter-row:last-child{border-bottom:none;}
@@ -115,11 +122,11 @@ main{padding:20px 24px;max-width:1400px;margin:0 auto;}
 .voter-pct{font-family:var(--mono);font-size:10px;color:var(--muted2);min-width:28px;text-align:right;}
 
 /* All time */
-.at-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
-.at-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;}
-.at-card-label{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
-.at-card-val{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--accent);}
-.at-card-sub{font-size:10px;color:var(--muted2);margin-top:3px;}
+.at-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px;}
+.at-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;}
+.at-card-label{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+.at-card-val{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--accent);}
+.at-card-sub{font-size:11px;color:var(--muted2);margin-top:4px;}
 
 .games-list{display:flex;flex-direction:column;gap:4px;padding:12px 16px;}
 .game-row{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-radius:6px;background:var(--surface2);border:1px solid var(--border);}
@@ -143,7 +150,7 @@ main{padding:20px 24px;max-width:1400px;margin:0 auto;}
     <div class="logo-badge">BA</div>
     <div>
       <div class="nav-title">Black Aces FC</div>
-      <div class="nav-sub">Player Ratings Exchange · Test Mode</div>
+      <div class="nav-sub">Player Ratings Exchange</div>
     </div>
   </div>
   <div class="live-dot"></div>
@@ -163,7 +170,6 @@ main{padding:20px 24px;max-width:1400px;margin:0 auto;}
         <div class="pbody np" id="wLb"></div>
       </div>
       <div class="col-stack">
-        <!-- Analytics Panel -->
         <div class="panel">
           <div class="phdr"><div class="ptitle">📊 Analytics</div></div>
           <div class="analytics-tabs">
@@ -175,7 +181,6 @@ main{padding:20px 24px;max-width:1400px;margin:0 auto;}
           <div class="apanel" id="apanel-teams"></div>
           <div class="apanel" id="apanel-voters"></div>
         </div>
-        <!-- Vote Tracker -->
         <div class="panel">
           <div class="phdr"><div class="ptitle">🗳️ Vote Tracker</div><div class="pbadge r" id="vtBadge">0/0</div></div>
           <div id="vChips"></div>
@@ -203,7 +208,7 @@ main{padding:20px 24px;max-width:1400px;margin:0 auto;}
   <div class="view" id="view-audit">
     <div class="g2">
       <div class="panel">
-        <div class="phdr"><div class="ptitle">⚠️ Flagged Votes This Week</div><div class="pbadge g" id="flagCount">0 flags</div></div>
+        <div class="phdr"><div class="ptitle">⚠️ Flagged Votes</div><div class="pbadge g" id="flagCount">0 flags</div></div>
         <div id="flagsList"><div style="padding:20px 15px;font-family:var(--mono);font-size:11px;color:var(--muted)">No flags detected.</div></div>
       </div>
       <div class="panel">
@@ -256,15 +261,13 @@ async function loadData(){
     const teams = await teamsRes.json();
 
     ALL_DATA = { weekly, allTime, audit, teams };
-
-    renderWeekly(weekly, teams);
+    renderWeekly(weekly, teams, allTime);
     renderAllTime(allTime);
     renderAudit(audit);
     buildTicker(allTime && allTime.players);
   } catch(e) {
     console.error("Dashboard load failed:", e);
     renderEmpty();
-    buildTicker(null);
   }
 }
 
@@ -273,16 +276,16 @@ function renderEmpty(){
     <div class="sc"><div class="sc-label">Votes Cast</div><div class="sc-val">0/0</div><div class="sc-sub">no votes yet</div></div>
     <div class="sc"><div class="sc-label">Avg Rating</div><div class="sc-val">—</div><div class="sc-sub">no data</div></div>
     <div class="sc"><div class="sc-label">MVP This Week</div><div class="sc-val" style="font-size:16px">—</div><div class="sc-sub">no data</div></div>
-    <div class="sc muted"><div class="sc-label">Pending</div><div class="sc-val">—</div><div class="sc-sub">no data</div></div>`;
+    <div class="sc muted"><div class="sc-label">Result</div><div class="sc-val">—</div><div class="sc-sub">no data</div></div>`;
 }
 
-function renderWeekly(d, teamsData){
+function renderWeekly(d, teamsData, allTime){
   if (!d) { renderEmpty(); return; }
   document.getElementById("wkLabel").textContent = d.weekKey || "—";
   const top = d.players && d.players[0];
   const avgRating = d.players && d.players.length
     ? (d.players.reduce((s,p)=>s+p.avg,0)/d.players.length) : null;
-  const resultColor = d.matchResult === "Win" ? "" : "red";
+  const resultColor = d.matchResult === "Win" ? "" : d.matchResult === "Loss" ? "red" : "";
   document.getElementById("wStats").innerHTML = `
     <div class="sc" style="animation-delay:0s"><div class="sc-label">Votes Cast</div><div class="sc-val">${d.totalVoters}/${d.expectedVoters}</div><div class="sc-sub">${d.expectedVoters?Math.round(d.totalVoters/d.expectedVoters*100):0}% done</div></div>
     <div class="sc" style="animation-delay:.05s"><div class="sc-label">Avg Rating</div><div class="sc-val">${avgRating?avgRating.toFixed(1):"—"}</div><div class="sc-sub">out of 5.0</div></div>
@@ -309,46 +312,83 @@ function renderWeekly(d, teamsData){
   document.getElementById("vtBadge").textContent = `${d.totalVoters}/${d.expectedVoters}`;
   document.getElementById("vtBadge").className = `pbadge ${d.totalVoters===d.expectedVoters?"g":"r"}`;
 
-  renderAnalytics(d, teamsData, ALL_DATA.allTime);
+  renderAnalytics(d, teamsData, allTime);
 }
 
 function renderAnalytics(weekly, teamsData, allTime){
-  // FORM — hot/cold based on delta from all time
   const players = allTime && allTime.players ? allTime.players : [];
+
+  // FORM tab — Hot/Cold + Most Improved
+  const withDelta = players.filter(p => p.delta !== 0);
+  const mostImproved = [...players].sort((a,b) => b.delta - a.delta)[0];
+  const mostDeclined = [...players].sort((a,b) => a.delta - b.delta)[0];
   const sorted = [...players].sort((a,b) => Math.abs(b.delta) - Math.abs(a.delta));
-  document.getElementById("apanel-form").innerHTML = sorted.length
-    ? sorted.slice(0,8).map(p => {
+
+  let formHtml = "";
+
+  if (mostImproved && mostImproved.delta > 0) {
+    formHtml += `
+      <div class="improved-card">
+        <div class="improved-label">🔥 Most Improved</div>
+        <div class="improved-name">${mostImproved.name}</div>
+        <div class="improved-sub">Biggest positive jump this week</div>
+        <div class="improved-divider">
+          <div class="improved-stat"><div class="improved-stat-val" style="color:var(--accent)">+${mostImproved.delta.toFixed(2)}</div><div class="improved-stat-label">Delta</div></div>
+          <div class="improved-stat"><div class="improved-stat-val">${mostImproved.avg.toFixed(2)}</div><div class="improved-stat-label">Current Avg</div></div>
+        </div>
+      </div>`;
+  }
+
+  if (mostDeclined && mostDeclined.delta < 0) {
+    formHtml += `
+      <div class="improved-card" style="border-color:rgba(255,61,90,.3)">
+        <div class="improved-label" style="color:var(--red)">📉 Biggest Drop</div>
+        <div class="improved-name" style="color:var(--red)">${mostDeclined.name}</div>
+        <div class="improved-sub">Biggest negative change this week</div>
+        <div class="improved-divider">
+          <div class="improved-stat"><div class="improved-stat-val" style="color:var(--red)">${mostDeclined.delta.toFixed(2)}</div><div class="improved-stat-label">Delta</div></div>
+          <div class="improved-stat"><div class="improved-stat-val">${mostDeclined.avg.toFixed(2)}</div><div class="improved-stat-label">Current Avg</div></div>
+        </div>
+      </div>`;
+  }
+
+  formHtml += sorted.length
+    ? sorted.slice(0,6).map(p => {
         const cls = p.delta > 0.2 ? "hot" : p.delta < -0.2 ? "cold" : "neutral";
         const arrow = p.delta > 0.2 ? "↑" : p.delta < -0.2 ? "↓" : "→";
         const label = p.delta > 0.2 ? "Hot" : p.delta < -0.2 ? "Cold" : "Stable";
         return `<div class="form-row">
           <span class="form-name">${p.name}</span>
-          <span class="form-delta ${cls}">${arrow} ${label} (${p.delta>0?"+":""}${p.delta.toFixed(1)})</span>
+          <span class="form-delta ${cls}">${arrow} ${label} (${p.delta>0?"+":""}${p.delta.toFixed(2)})</span>
         </div>`;
       }).join("")
-    : `<div style="color:var(--muted);font-size:11px;font-family:var(--mono);padding:8px 0">Need 2+ weeks of data</div>`;
+    : `<div style="color:var(--muted);font-size:11px;font-family:var(--mono);padding:8px 0">Need 2+ weeks of data for form guide</div>`;
 
-  // TEAMS — compare avg ratings between teams this week
+  document.getElementById("apanel-form").innerHTML = formHtml;
+
+  // TEAMS tab
   if (teamsData && teamsData.teams && weekly.players && weekly.players.length) {
     const teamA = Array.isArray(teamsData.teams.teamA) ? teamsData.teams.teamA : teamsData.teams.teamA.split(",").map(n=>n.trim());
     const teamB = Array.isArray(teamsData.teams.teamB) ? teamsData.teams.teamB : teamsData.teams.teamB.split(",").map(n=>n.trim());
     const getAvg = (team) => {
       const rated = weekly.players.filter(p => team.includes(p.name));
-      return rated.length ? (rated.reduce((s,p)=>s+p.avg,0)/rated.length).toFixed(2) : "—";
+      return rated.length ? +(rated.reduce((s,p)=>s+p.avg,0)/rated.length).toFixed(2) : null;
     };
     const avgA = getAvg(teamA);
     const avgB = getAvg(teamB);
+    const aWins = avgA && avgB ? avgA > avgB : false;
+    const bWins = avgA && avgB ? avgB > avgA : false;
     document.getElementById("apanel-teams").innerHTML = `
       <div class="team-compare">
-        <div class="team-box">
+        <div class="team-box ${aWins?"team-winner":""}">
           <div class="team-box-name">${teamsData.teams.teamAName||"Team A"}</div>
-          <div class="team-box-avg">${avgA}</div>
-          <div class="team-box-sub">avg rating</div>
+          <div class="team-box-avg">${avgA !== null ? avgA : "—"}</div>
+          <div class="team-box-sub">${aWins?"⭐ Higher rated":""} avg rating</div>
         </div>
-        <div class="team-box">
+        <div class="team-box ${bWins?"team-winner":""}">
           <div class="team-box-name">${teamsData.teams.teamBName||"Team B"}</div>
-          <div class="team-box-avg">${avgB}</div>
-          <div class="team-box-sub">avg rating</div>
+          <div class="team-box-avg">${avgB !== null ? avgB : "—"}</div>
+          <div class="team-box-sub">${bWins?"⭐ Higher rated":""} avg rating</div>
         </div>
       </div>
       <div style="font-family:var(--mono);font-size:10px;color:var(--muted)">Based on this week's votes</div>`;
@@ -356,31 +396,28 @@ function renderAnalytics(weekly, teamsData, allTime){
     document.getElementById("apanel-teams").innerHTML = `<div style="color:var(--muted);font-size:11px;font-family:var(--mono);padding:8px 0">Paste teams in Telegram first</div>`;
   }
 
-  // VOTERS — participation rate per player
-  if (allTime && allTime.players && allTime.recentGames) {
-    const totalGames = allTime.recentGames.length || 1;
-    const voteMap = {};
-    if (ALL_DATA.audit && ALL_DATA.audit.auditLog) {
-      ALL_DATA.audit.auditLog.filter(e => e.event === "VoteReceived").forEach(e => {
-        const voter = e.detail.split(" rated")[0];
-        if (!voteMap[voter]) voteMap[voter] = 0;
-        voteMap[voter]++;
-      });
-    }
-    const sorted = PLAYERS.map(p => ({
-      name: p.name,
-      votes: voteMap[p.name] || 0,
-      pct: Math.round(((voteMap[p.name]||0)/totalGames)*100)
-    })).sort((a,b) => b.pct - a.pct);
-    document.getElementById("apanel-voters").innerHTML = sorted.map(p => `
-      <div class="voter-row">
-        <span class="voter-name">${p.name}</span>
-        <div class="voter-bar-wrap"><div class="voter-bar-fill" style="width:${Math.min(p.pct,100)}%"></div></div>
-        <span class="voter-pct">${p.pct}%</span>
-      </div>`).join("");
-  } else {
-    document.getElementById("apanel-voters").innerHTML = `<div style="color:var(--muted);font-size:11px;font-family:var(--mono);padding:8px 0">No data yet</div>`;
+  // VOTERS tab
+  const totalGames = allTime && allTime.recentGames ? Math.max(allTime.recentGames.length, 1) : 1;
+  const voteMap = {};
+  if (ALL_DATA.audit && ALL_DATA.audit.auditLog) {
+    ALL_DATA.audit.auditLog.filter(e => e.event === "VoteReceived").forEach(e => {
+      const voter = e.detail.split(" rated")[0];
+      if (!voteMap[voter]) voteMap[voter] = 0;
+      voteMap[voter]++;
+    });
   }
+  const votersSorted = PLAYERS.map(p => ({
+    name: p.name,
+    votes: voteMap[p.name] || 0,
+    pct: Math.min(Math.round(((voteMap[p.name]||0)/totalGames)*100), 100)
+  })).sort((a,b) => b.pct - a.pct);
+
+  document.getElementById("apanel-voters").innerHTML = votersSorted.map(p => `
+    <div class="voter-row">
+      <span class="voter-name">${p.name}</span>
+      <div class="voter-bar-wrap"><div class="voter-bar-fill" style="width:${p.pct}%"></div></div>
+      <span class="voter-pct">${p.pct}%</span>
+    </div>`).join("");
 }
 
 function renderAllTime(d){
@@ -388,15 +425,20 @@ function renderAllTime(d){
   const top = d.players[0];
   const totalGames = d.recentGames ? d.recentGames.length : 0;
   const wins = d.recentGames ? d.recentGames.filter(g=>g.result==="Win").length : 0;
+  const mostImproved = [...d.players].filter(p=>p.delta>0).sort((a,b)=>b.delta-a.delta)[0];
   document.getElementById("atStats").innerHTML = `
     <div class="at-card"><div class="at-card-label">All-Time MVP</div><div class="at-card-val">${top.name}</div><div class="at-card-sub">${top.avg} avg ⭐</div></div>
     <div class="at-card"><div class="at-card-label">Games Tracked</div><div class="at-card-val">${totalGames}</div><div class="at-card-sub">this season</div></div>
-    <div class="at-card"><div class="at-card-label">Win Rate</div><div class="at-card-val">${totalGames?Math.round(wins/totalGames*100):0}%</div><div class="at-card-sub">${wins} wins</div></div>
-    <div class="at-card"><div class="at-card-label">Most Active</div><div class="at-card-val" style="font-size:16px">${d.players.sort((a,b)=>b.count-a.count)[0]?.name||"—"}</div><div class="at-card-sub">most ratings received</div></div>`;
+    <div class="at-card"><div class="at-card-label">Win Rate</div><div class="at-card-val">${totalGames?Math.round(wins/totalGames*100):0}%</div><div class="at-card-sub">${wins} wins of ${totalGames}</div></div>
+    <div class="at-card"><div class="at-card-label">Most Improved</div><div class="at-card-val" style="font-size:16px">${mostImproved?mostImproved.name:"—"}</div><div class="at-card-sub">${mostImproved?"+"+mostImproved.delta.toFixed(2)+" this week":"need 2+ weeks"}</div></div>`;
 
   const medals = ["🥇","🥈","🥉"];
   document.getElementById("atLb").innerHTML = d.players.map((p,i) => {
-    const deltaStr = p.delta > 0 ? `<span style="color:var(--accent)">+${p.delta}</span>` : p.delta < 0 ? `<span style="color:var(--red)">${p.delta}</span>` : `<span style="color:var(--muted)">—</span>`;
+    const deltaStr = p.delta > 0
+      ? `<span style="color:var(--accent)">+${p.delta}</span>`
+      : p.delta < 0
+      ? `<span style="color:var(--red)">${p.delta}</span>`
+      : `<span style="color:var(--muted)">—</span>`;
     return `<div class="lb-row">
       <div class="lb-rank ${i===0?"g":i===1?"s":i===2?"b":""}">${medals[i]||i+1}</div>
       <div class="lb-info">
@@ -442,7 +484,7 @@ function buildTicker(players){
   }
   const items = players.map(p => `<div class="ticker-item">
     <span class="ticker-name">${p.name.toUpperCase()}</span>
-    <span class="${p.delta>0?"fl":"fd"}">${p.avg.toFixed(2)}</span>
+    <span class="${p.delta>=0?"fl":"fd"}">${p.avg.toFixed(2)}</span>
     <span style="font-size:10px" class="${p.delta>0?"fl":p.delta<0?"fd":"neutral"}">${p.delta>0?"+":""}${p.delta.toFixed(2)}</span>
   </div>`).join("");
   document.getElementById("tickerInner").innerHTML = items + items;
