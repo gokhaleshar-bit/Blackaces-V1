@@ -134,13 +134,18 @@
 // ============================================================
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzOcAK-0mTMTZ9_MNTksv8EJO1bu7T_CxX0UmqYs4-J_C7bk0oUHZDYmxmxOi9F03qZVA/exec";
 
-const PLAYERS = [
-  { name: "Shardul", pos: "MID" },
-  { name: "Swakeet", pos: "DEF" },
-  { name: "Kavan",   pos: "FWD" },
-];
+let PLAYERS = [];
 
-const STAR_LABELS = ["","Poor","Below Avg","Average","Good","Outstanding"];
+async function loadPlayers() {
+  try {
+    const res = await fetch(SCRIPT_URL + "?action=players");
+    const data = await res.json();
+    PLAYERS = data.players || [];
+    init();
+  } catch(e) {
+    console.error("Failed to load players:", e);
+  }
+}const STAR_LABELS = ["","Poor","Below Avg","Average","Good","Outstanding"];
 
 let currentVoter = null;
 let activePlayers = [];
@@ -288,7 +293,7 @@ function updateStep(n) {
   }
 }
 
-init();
+loadPlayers();
 </script>
 </body>
 </html>
