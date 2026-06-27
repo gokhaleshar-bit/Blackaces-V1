@@ -57,6 +57,9 @@
   .already-voted{background:rgba(0,229,255,.06);border:1.5px solid var(--accent);border-radius:10px;padding:14px 16px;font-size:13px;color:var(--accent);margin-bottom:24px;display:none;}
   .date-chip{display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;color:var(--muted);margin-bottom:20px;}
   .loading-msg{text-align:center;color:var(--muted);font-size:14px;padding:40px 20px;}
+  .team-tag{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.1em;padding:2px 6px;border-radius:4px;margin-left:4px;text-transform:uppercase;}
+  .team-a{background:rgba(0,229,255,.1);color:var(--accent);}
+  .team-b{background:rgba(239,68,68,.1);color:var(--red);}
 </style>
 </head>
 <body>
@@ -85,14 +88,14 @@
 
   <div id="step2" style="display:none">
     <div class="section-title">Step 2 — Who played today?</div>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Select everyone on the pitch (you are auto-included)</p>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">All players are pre-selected. Deselect anyone who did not play.</p>
     <div class="played-grid" id="playedGrid"></div>
     <button class="submit-btn" id="confirmPlayers" onclick="goToStep3()" style="margin-bottom:24px" disabled>Confirm Squad</button>
   </div>
 
   <div id="step3" style="display:none">
     <div class="section-title">Step 3 — Rate the players</div>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:6px;">Do not rate yourself. Be honest.</p>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:6px;">Rate everyone who played. Do not rate yourself.</p>
     <div class="progress-bar"><div class="progress-fill" id="ratingProgress" style="width:0%"></div></div>
     <div class="players-list" id="playersList"></div>
     <button class="submit-btn" id="submitBtn" onclick="submitVotes()" disabled style="margin-top:16px;">Submit Votes</button>
@@ -173,6 +176,15 @@ function selectVoter(idx, btn) {
   setTimeout(goToStep2, 400);
 }
 
+function getTeamForPlayer(name) {
+  if (!TEAMS) return null;
+  const teamA = Array.isArray(TEAMS.teamA) ? TEAMS.teamA : TEAMS.teamA.split(",").map(n => n.trim());
+  const teamB = Array.isArray(TEAMS.teamB) ? TEAMS.teamB : TEAMS.teamB.split(",").map(n => n.trim());
+  if (teamA.includes(name)) return "A";
+  if (teamB.includes(name)) return "B";
+  return null;
+}
+
 function goToStep2() {
   document.getElementById("step1").style.display = "none";
   document.getElementById("step2").style.display = "block";
@@ -181,37 +193,23 @@ function goToStep2() {
   grid.innerHTML = "";
   activePlayers = [];
 
-  if (TEAMS) {
-    const teamA = Array.isArray(TEAMS.teamA) ? TEAMS.teamA : TEAMS.teamA.split(",").map(n => n.trim());
-    const voterName = PLAYERS[currentVoter].name;
-    const voterTeam = teamA.includes(voterName) ? teamA : (Array.isArray(TEAMS.teamB) ? TEAMS.teamB : TEAMS.teamB.split(",").map(n => n.trim()));
-    PLAYERS.forEach((p, i) => {
-      const inMyTeam = voterTeam.includes(p.name);
-      const isSelf = i === currentVoter;
-      const btn = document.createElement("button");
-      btn.className = "played-btn" + (isSelf ? " active self-excluded" : (inMyTeam ? " active" : ""));
-      btn.innerHTML = '<span class="dot"></span>' + p.name;
-      if (isSelf) {
-        activePlayers.push(i);
-      } else {
-        if (inMyTeam) activePlayers.push(i);
-        btn.onclick = () => togglePlayer(i, btn);
-      }
-      grid.appendChild(btn);
-    });
-  } else {
-    PLAYERS.forEach((p, i) => {
-      const btn = document.createElement("button");
-      btn.className = "played-btn" + (i === currentVoter ? " active self-excluded" : "");
-      btn.innerHTML = '<span class="dot"></span>' + p.name;
-      if (i === currentVoter) {
-        activePlayers.push(i);
-      } else {
-        btn.onclick = () => togglePlayer(i, btn);
-      }
-      grid.appendChild(btn);
-    });
-  }
+  PLAYERS.forEach((p, i) => {
+    const isSelf = i === currentVoter;
+    const team = getTeamForPlayer(p.name);
+    const btn = document.createElement("button");
+    btn.className = "played-btn active" + (isSelf ? " self-excluded" : "");
+    const teamTag = team === "A"
+      ? `<span class="team-tag team-a">${TEAMS ? TEAMS.teamAName || "A" : "A"}</span>`
+      : team === "B"
+      ? `<span class="team-tag team-b">${TEAMS ? TEAMS.teamBName || "B" : "B"}</span>`
+      : "";
+    btn.innerHTML = '<span class="dot"></span>' + p.name + teamTag;
+    activePlayers.push(i);
+    if (!isSelf) {
+      btn.onclick = () => togglePlayer(i, btn);
+    }
+    grid.appendChild(btn);
+  });
   checkConfirm();
 }
 
@@ -235,11 +233,17 @@ function goToStep3() {
   ratings = {};
   activePlayers.filter(i => i !== currentVoter).forEach((idx, ci) => {
     const p = PLAYERS[idx];
+    const team = getTeamForPlayer(p.name);
+    const teamTag = team === "A"
+      ? `<span class="team-tag team-a">${TEAMS ? TEAMS.teamAName || "A" : "A"}</span>`
+      : team === "B"
+      ? `<span class="team-tag team-b">${TEAMS ? TEAMS.teamBName || "B" : "B"}</span>`
+      : "";
     const card = document.createElement("div");
     card.className = "player-card";
     card.style.animationDelay = (ci * 0.05) + "s";
     card.innerHTML =
-      '<div class="player-name">' + p.name + '<span class="player-pos">' + p.pos + '</span></div>' +
+      '<div class="player-name">' + p.name + '<span class="player-pos">' + p.pos + '</span>' + teamTag + '</div>' +
       '<div class="stars" id="stars_' + idx + '">' +
       [1,2,3,4,5].map(v => '<div class="star" onclick="rate(' + idx + ',' + v + ',this)">' + v + '</div>').join("") +
       '</div>' +
@@ -256,8 +260,7 @@ function rate(playerIdx, value, star) {
   star.closest(".player-card").classList.add("rated");
   updateProgress();
   const toRate = activePlayers.filter(i => i !== currentVoter);
-  const allRated = Object.keys(ratings).length === toRate.length;
-  document.getElementById("submitBtn").disabled = !allRated;
+  document.getElementById("submitBtn").disabled = Object.keys(ratings).length !== toRate.length;
 }
 
 function updateProgress() {
