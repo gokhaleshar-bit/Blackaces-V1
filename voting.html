@@ -64,6 +64,7 @@
   .already-voted{background:rgba(0,229,255,.06);border:1.5px solid var(--accent);border-radius:10px;padding:14px 16px;font-size:13px;color:var(--accent);margin-bottom:24px;display:none;}
   .date-chip{display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;color:var(--muted);margin-bottom:20px;}
   .loading-msg{text-align:center;color:var(--muted);font-size:14px;padding:40px 20px;}
+  .team-label{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;margin-top:4px;}
 </style>
 </head>
 <body>
@@ -84,41 +85,37 @@
     <div class="step" id="s3"></div>
     <div class="step" id="s4"></div>
   </div>
-  <div class="already-voted" id="alreadyVoted">✓ You've already voted this week. See you next Saturday!</div>
+  <div class="already-voted" id="alreadyVoted">You have already voted this week. See you next Saturday!</div>
 
-  <!-- STEP 1 -->
   <div id="step1">
     <div class="section-title">Step 1 — Who are you?</div>
     <div class="voter-select" id="voterGrid"><div class="loading-msg">Loading players...</div></div>
   </div>
 
-  <!-- STEP 2 -->
   <div id="step2" style="display:none">
     <div class="section-title">Step 2 — Who played today?</div>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Select everyone on the pitch (you're auto-included)</p>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Select everyone on the pitch (you are auto-included)</p>
     <div class="played-grid" id="playedGrid"></div>
-    <button class="submit-btn" id="confirmPlayers" onclick="goToStep3()" style="margin-bottom:24px" disabled>Confirm Squad →</button>
+    <button class="submit-btn" id="confirmPlayers" onclick="goToStep3()" style="margin-bottom:24px" disabled>Confirm Squad</button>
   </div>
 
-  <!-- STEP 3 -->
   <div id="step3" style="display:none">
     <div class="section-title">Step 3 — Rate the players</div>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:6px;">Don't rate yourself. Be honest.</p>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:6px;">Do not rate yourself. Be honest.</p>
     <div class="progress-bar"><div class="progress-fill" id="ratingProgress" style="width:0%"></div></div>
     <div class="players-list" id="playersList"></div>
   </div>
 
-  <!-- STEP 4 -->
   <div id="step4" style="display:none">
     <div class="section-title">Step 4 — Match result</div>
     <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">How did your team do?</p>
     <div class="result-row">
-      <button class="result-btn" onclick="selectResult('Win',this)">⚽ We Won</button>
-      <button class="result-btn" onclick="selectResult('Loss',this)">❌ We Lost</button>
-      <button class="result-btn" onclick="selectResult('Draw',this)">🤝 Draw</button>
+      <button class="result-btn" onclick="selectResult('Win',this)">We Won</button>
+      <button class="result-btn" onclick="selectResult('Loss',this)">We Lost</button>
+      <button class="result-btn" onclick="selectResult('Draw',this)">Draw</button>
     </div>
     <hr class="divider"/>
-    <button class="submit-btn" id="submitBtn" onclick="submitVotes()" disabled>Submit Votes ✓</button>
+    <button class="submit-btn" id="submitBtn" onclick="submitVotes()" disabled>Submit Votes</button>
   </div>
 </div>
 
@@ -130,10 +127,10 @@
 
 <script>
 const SCRIPT_URL = "https://summer-darkness-e6f1.gokhaleshar.workers.dev";
-
 const STAR_LABELS = ["","Poor","Below Avg","Average","Good","Outstanding"];
 
 let PLAYERS = [];
+let TEAMS = null;
 let currentVoter = null;
 let activePlayers = [];
 let ratings = {};
@@ -141,9 +138,22 @@ let matchResult = null;
 
 async function loadPlayers() {
   try {
-    const res = await fetch(SCRIPT_URL + "?action=players");
-    const data = await res.json();
-    PLAYERS = data.players || [];
+    const teamsRes = await fetch(SCRIPT_URL + "?action=teams");
+    const teamsData = await teamsRes.json();
+    const playersRes = await fetch(SCRIPT_URL + "?action=players");
+    const playersData = await playersRes.json();
+    const allRegistered = playersData.players || [];
+
+    if (teamsData.teams) {
+      TEAMS = teamsData.teams;
+      const teamA = Array.isArray(TEAMS.teamA) ? TEAMS.teamA : TEAMS.teamA.split(",").map(n => n.trim());
+      const teamB = Array.isArray(TEAMS.teamB) ? TEAMS.teamB : TEAMS.teamB.split(",").map(n => n.trim());
+      const allPlayers = [...new Set([...teamA, ...teamB])];
+      PLAYERS = allPlayers.map(name => allRegistered.find(p => p.name === name)).filter(p => p);
+    } else {
+      PLAYERS = allRegistered;
+    }
+
     if (PLAYERS.length > 0) {
       init();
     } else {
@@ -151,7 +161,7 @@ async function loadPlayers() {
     }
   } catch(e) {
     console.error("Failed to load players:", e);
-    document.getElementById("voterGrid").innerHTML = '<div class="loading-msg">Failed to load players. Please refresh.</div>';
+    document.getElementById("voterGrid").innerHTML = '<div class="loading-msg">Failed to load. Please refresh.</div>';
   }
 }
 
@@ -178,7 +188,7 @@ function init() {
 }
 
 function selectVoter(idx, btn) {
-  document.querySelectorAll(".voter-btn").forEach(b=>b.classList.remove("selected"));
+  document.querySelectorAll(".voter-btn").forEach(b => b.classList.remove("selected"));
   btn.classList.add("selected");
   currentVoter = idx;
   updateStep(1);
@@ -192,29 +202,52 @@ function goToStep2() {
   const grid = document.getElementById("playedGrid");
   grid.innerHTML = "";
   activePlayers = [];
-  PLAYERS.forEach((p, i) => {
-    const btn = document.createElement("button");
-    btn.className = "played-btn" + (i === currentVoter ? " active self-excluded" : "");
-    btn.innerHTML = `<span class="dot"></span>${p.name}`;
-    if (i === currentVoter) {
-      activePlayers.push(i);
-    } else {
-      btn.onclick = () => togglePlayer(i, btn);
-    }
-    grid.appendChild(btn);
-  });
+
+  if (TEAMS) {
+    const teamA = Array.isArray(TEAMS.teamA) ? TEAMS.teamA : TEAMS.teamA.split(",").map(n => n.trim());
+    const teamB = Array.isArray(TEAMS.teamB) ? TEAMS.teamB : TEAMS.teamB.split(",").map(n => n.trim());
+    const voterName = PLAYERS[currentVoter].name;
+    const voterTeam = teamA.includes(voterName) ? teamA : teamB;
+
+    PLAYERS.forEach((p, i) => {
+      const inMyTeam = voterTeam.includes(p.name);
+      const isSelf = i === currentVoter;
+      const btn = document.createElement("button");
+      btn.className = "played-btn" + (isSelf ? " active self-excluded" : (inMyTeam ? " active" : ""));
+      btn.innerHTML = '<span class="dot"></span>' + p.name;
+      if (isSelf) {
+        activePlayers.push(i);
+      } else {
+        if (inMyTeam) activePlayers.push(i);
+        btn.onclick = () => togglePlayer(i, btn);
+      }
+      grid.appendChild(btn);
+    });
+  } else {
+    PLAYERS.forEach((p, i) => {
+      const btn = document.createElement("button");
+      btn.className = "played-btn" + (i === currentVoter ? " active self-excluded" : "");
+      btn.innerHTML = '<span class="dot"></span>' + p.name;
+      if (i === currentVoter) {
+        activePlayers.push(i);
+      } else {
+        btn.onclick = () => togglePlayer(i, btn);
+      }
+      grid.appendChild(btn);
+    });
+  }
   checkConfirm();
 }
 
 function togglePlayer(idx, btn) {
   btn.classList.toggle("active");
   if (btn.classList.contains("active")) activePlayers.push(idx);
-  else activePlayers = activePlayers.filter(i=>i!==idx);
+  else activePlayers = activePlayers.filter(i => i !== idx);
   checkConfirm();
 }
 
 function checkConfirm() {
-  document.getElementById("confirmPlayers").disabled = activePlayers.filter(i=>i!==currentVoter).length < 1;
+  document.getElementById("confirmPlayers").disabled = activePlayers.filter(i => i !== currentVoter).length < 1;
 }
 
 function goToStep3() {
@@ -224,17 +257,17 @@ function goToStep3() {
   const list = document.getElementById("playersList");
   list.innerHTML = "";
   ratings = {};
-  activePlayers.filter(i=>i!==currentVoter).forEach((idx, ci) => {
+  activePlayers.filter(i => i !== currentVoter).forEach((idx, ci) => {
     const p = PLAYERS[idx];
     const card = document.createElement("div");
     card.className = "player-card";
-    card.style.animationDelay = (ci*0.05)+"s";
-    card.innerHTML = `
-      <div class="player-name">${p.name}<span class="player-pos">${p.pos}</span></div>
-      <div class="stars" id="stars_${idx}">
-        ${[1,2,3,4,5].map(v=>`<div class="star" onclick="rate(${idx},${v},this)">${v}</div>`).join("")}
-      </div>
-      <div class="star-label" id="label_${idx}">Tap to rate</div>`;
+    card.style.animationDelay = (ci * 0.05) + "s";
+    card.innerHTML =
+      '<div class="player-name">' + p.name + '<span class="player-pos">' + p.pos + '</span></div>' +
+      '<div class="stars" id="stars_' + idx + '">' +
+      [1,2,3,4,5].map(v => '<div class="star" onclick="rate(' + idx + ',' + v + ',this)">' + v + '</div>').join("") +
+      '</div>' +
+      '<div class="star-label" id="label_' + idx + '">Tap to rate</div>';
     list.appendChild(card);
   });
   updateProgress();
@@ -242,18 +275,18 @@ function goToStep3() {
 
 function rate(playerIdx, value, star) {
   ratings[playerIdx] = value;
-  document.querySelectorAll(`#stars_${playerIdx} .star`).forEach((s,i)=>s.classList.toggle("active",i<value));
-  document.getElementById("label_"+playerIdx).textContent = STAR_LABELS[value];
+  document.querySelectorAll("#stars_" + playerIdx + " .star").forEach((s,i) => s.classList.toggle("active", i < value));
+  document.getElementById("label_" + playerIdx).textContent = STAR_LABELS[value];
   star.closest(".player-card").classList.add("rated");
   updateProgress();
-  const toRate = activePlayers.filter(i=>i!==currentVoter);
+  const toRate = activePlayers.filter(i => i !== currentVoter);
   if (Object.keys(ratings).length === toRate.length) setTimeout(goToStep4, 600);
 }
 
 function updateProgress() {
-  const toRate = activePlayers.filter(i=>i!==currentVoter);
-  const pct = toRate.length ? (Object.keys(ratings).length/toRate.length)*100 : 0;
-  document.getElementById("ratingProgress").style.width = pct+"%";
+  const toRate = activePlayers.filter(i => i !== currentVoter);
+  const pct = toRate.length ? (Object.keys(ratings).length / toRate.length) * 100 : 0;
+  document.getElementById("ratingProgress").style.width = pct + "%";
 }
 
 function goToStep4() {
@@ -264,9 +297,9 @@ function goToStep4() {
 
 function selectResult(result, btn) {
   matchResult = result;
-  document.querySelectorAll(".result-btn").forEach(b=>b.classList.remove("win","loss","draw"));
-  if (result==="Win") btn.classList.add("win");
-  else if (result==="Loss") btn.classList.add("loss");
+  document.querySelectorAll(".result-btn").forEach(b => b.classList.remove("win","loss","draw"));
+  if (result === "Win") btn.classList.add("win");
+  else if (result === "Loss") btn.classList.add("loss");
   else btn.classList.add("draw");
   document.getElementById("submitBtn").disabled = false;
 }
@@ -279,21 +312,20 @@ async function submitVotes() {
     date: new Date().toISOString().split("T")[0],
     weekKey: getWeekKey(),
     matchResult,
-    activePlayers: activePlayers.map(i=>PLAYERS[i].name),
-    ratings: Object.fromEntries(Object.entries(ratings).map(([idx,val])=>[PLAYERS[idx].name,val]))
+    activePlayers: activePlayers.map(i => PLAYERS[i].name),
+    ratings: Object.fromEntries(Object.entries(ratings).map(([idx,val]) => [PLAYERS[idx].name, val]))
   };
   try {
-    await fetch(SCRIPT_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
-  } catch(e){}
-  localStorage.setItem("voted_"+getWeekKey(),"1");
-  document.getElementById("mainForm").style.display="none";
+    await fetch(SCRIPT_URL, {method:"POST", mode:"no-cors", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload)});
+  } catch(e) {}
+  localStorage.setItem("voted_" + getWeekKey(), "1");
+  document.getElementById("mainForm").style.display = "none";
   document.getElementById("successScreen").classList.add("show");
 }
 
 function updateStep(n) {
-  for(let i=1;i<=4;i++){
-    const el=document.getElementById("s"+i);
-    el.className="step"+(i<n?" done":i===n?" active":"");
+  for (let i = 1; i <= 4; i++) {
+    document.getElementById("s" + i).className = "step" + (i < n ? " done" : i === n ? " active" : "");
   }
 }
 
