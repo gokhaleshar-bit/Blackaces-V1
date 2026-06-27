@@ -57,6 +57,7 @@
   .already-voted{background:rgba(0,229,255,.06);border:1.5px solid var(--accent);border-radius:10px;padding:14px 16px;font-size:13px;color:var(--accent);margin-bottom:24px;display:none;}
   .date-chip{display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;color:var(--muted);margin-bottom:20px;}
   .loading-msg{text-align:center;color:var(--muted);font-size:14px;padding:40px 20px;}
+  .error-msg{background:rgba(239,68,68,.1);border:1.5px solid var(--red);border-radius:10px;padding:14px 16px;font-size:13px;color:var(--red);margin-bottom:16px;display:none;}
   .team-tag{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.1em;padding:2px 6px;border-radius:4px;margin-left:4px;text-transform:uppercase;}
   .team-a{background:rgba(0,229,255,.1);color:var(--accent);}
   .team-b{background:rgba(239,68,68,.1);color:var(--red);}
@@ -80,6 +81,7 @@
     <div class="step" id="s3"></div>
   </div>
   <div class="already-voted" id="alreadyVoted">You have already voted this week. See you next Saturday!</div>
+  <div class="error-msg" id="errorMsg"></div>
 
   <div id="step1">
     <div class="section-title">Step 1 — Who are you?</div>
@@ -205,9 +207,7 @@ function goToStep2() {
       : "";
     btn.innerHTML = '<span class="dot"></span>' + p.name + teamTag;
     activePlayers.push(i);
-    if (!isSelf) {
-      btn.onclick = () => togglePlayer(i, btn);
-    }
+    if (!isSelf) btn.onclick = () => togglePlayer(i, btn);
     grid.appendChild(btn);
   });
   checkConfirm();
@@ -269,6 +269,13 @@ function updateProgress() {
   document.getElementById("ratingProgress").style.width = pct + "%";
 }
 
+function showError(msg) {
+  const el = document.getElementById("errorMsg");
+  el.textContent = msg;
+  el.style.display = "block";
+  setTimeout(() => el.style.display = "none", 5000);
+}
+
 async function submitVotes() {
   document.getElementById("submitBtn").disabled = true;
   document.getElementById("submitBtn").textContent = "Submitting...";
@@ -281,8 +288,23 @@ async function submitVotes() {
     ratings: Object.fromEntries(Object.entries(ratings).map(([idx,val]) => [PLAYERS[idx].name, val]))
   };
   try {
-    await fetch(SCRIPT_URL, {method:"POST", mode:"no-cors", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload)});
-  } catch(e) {}
+    const res = await fetch(SCRIPT_URL, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.error === "already_voted") {
+      showError("You have already voted this week!");
+      document.getElementById("submitBtn").disabled = false;
+      document.getElementById("submitBtn").textContent = "Submit Votes";
+      return;
+    }
+  } catch(e) {
+    try {
+      await fetch(SCRIPT_URL, {method:"POST", mode:"no-cors", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload)});
+    } catch(e2) {}
+  }
   localStorage.setItem("voted_" + getWeekKey(), "1");
   document.getElementById("mainForm").style.display = "none";
   document.getElementById("successScreen").classList.add("show");
