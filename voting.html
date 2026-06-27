@@ -135,16 +135,25 @@
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzOcAK-0mTMTZ9_MNTksv8EJO1bu7T_CxX0UmqYs4-J_C7bk0oUHZDYmxmxOi9F03qZVA/exec";
 
 let PLAYERS = [];
-
 async function loadPlayers() {
-  try {
-    const res = await fetch(SCRIPT_URL + "?action=players");
-    const data = await res.json();
-    PLAYERS = data.players || [];
-    loadPlayers();
-  } catch(e) {
-    console.error("Failed to load players:", e);
+  let attempts = 0;
+  while (attempts < 3) {
+    try {
+      const res = await fetch(SCRIPT_URL + "?action=players");
+      const data = await res.json();
+      PLAYERS = data.players || [];
+      if (PLAYERS.length > 0) {
+        init();
+        return;
+      }
+    } catch(e) {
+      console.error("Failed to load players, retrying...", e);
+    }
+    attempts++;
+    await new Promise(r => setTimeout(r, 3000));
   }
+  console.error("Could not load players after 3 attempts");
+}
 }const STAR_LABELS = ["","Poor","Below Avg","Average","Good","Outstanding"];
 
 let currentVoter = null;
