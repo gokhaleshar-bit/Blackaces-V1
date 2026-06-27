@@ -63,6 +63,7 @@
   .divider{border:none;border-top:1px solid var(--border);margin:4px 0 24px;}
   .already-voted{background:rgba(0,229,255,.06);border:1.5px solid var(--accent);border-radius:10px;padding:14px 16px;font-size:13px;color:var(--accent);margin-bottom:24px;display:none;}
   .date-chip{display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;color:var(--muted);margin-bottom:20px;}
+  .loading-msg{text-align:center;color:var(--muted);font-size:14px;padding:40px 20px;}
 </style>
 </head>
 <body>
@@ -88,7 +89,7 @@
   <!-- STEP 1 -->
   <div id="step1">
     <div class="section-title">Step 1 — Who are you?</div>
-    <div class="voter-select" id="voterGrid"></div>
+    <div class="voter-select" id="voterGrid"><div class="loading-msg">Loading players...</div></div>
   </div>
 
   <!-- STEP 2 -->
@@ -128,44 +129,42 @@
 </div>
 
 <script>
-// ============================================================
-// ✅ PRE-FILLED — Shardul, Swakeet, Kavan
-// Only change SCRIPT_URL — paste your Apps Script URL below
-// ============================================================
-  const SCRIPT_URL = "https://summer-darkness-e6f1.gokhaleshar.workers.dev";
+const SCRIPT_URL = "https://summer-darkness-e6f1.gokhaleshar.workers.dev";
 
-let PLAYERS = [];
-async function loadPlayers() {
-  let attempts = 0;
-  while (attempts < 3) {
-    try {
-      const res = await fetch(SCRIPT_URL + "?action=players");
-      const data = await res.json();
-      PLAYERS = data.players || [];
-      if (PLAYERS.length > 0) {
-        init();
-        return;
-      }
-    } catch(e) {
-      console.error("Failed to load players, retrying...", e);
-    }
-    attempts++;
-    await new Promise(r => setTimeout(r, 3000));
-  }
-  console.error("Could not load players after 3 attempts");
-}
-}
 const STAR_LABELS = ["","Poor","Below Avg","Average","Good","Outstanding"];
 
+let PLAYERS = [];
 let currentVoter = null;
 let activePlayers = [];
 let ratings = {};
 let matchResult = null;
 
+async function loadPlayers() {
+  try {
+    const res = await fetch(SCRIPT_URL + "?action=players");
+    const data = await res.json();
+    PLAYERS = data.players || [];
+    if (PLAYERS.length > 0) {
+      init();
+    } else {
+      document.getElementById("voterGrid").innerHTML = '<div class="loading-msg">No players found. Contact admin.</div>';
+    }
+  } catch(e) {
+    console.error("Failed to load players:", e);
+    document.getElementById("voterGrid").innerHTML = '<div class="loading-msg">Failed to load players. Please refresh.</div>';
+  }
+}
+
+function getWeekKey() {
+  const d = new Date(), jan1 = new Date(d.getFullYear(),0,1);
+  return d.getFullYear() + "_w" + Math.ceil(((d-jan1)/86400000+jan1.getDay()+1)/7);
+}
+
 function init() {
   document.getElementById("dateChip").textContent =
     "📅 " + new Date().toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
   const grid = document.getElementById("voterGrid");
+  grid.innerHTML = "";
   PLAYERS.forEach((p, i) => {
     const btn = document.createElement("button");
     btn.className = "voter-btn";
@@ -176,11 +175,6 @@ function init() {
   if (localStorage.getItem("voted_" + getWeekKey())) {
     document.getElementById("alreadyVoted").style.display = "block";
   }
-}
-
-function getWeekKey() {
-  const d = new Date(), jan1 = new Date(d.getFullYear(),0,1);
-  return d.getFullYear() + "_w" + Math.ceil(((d-jan1)/86400000+jan1.getDay()+1)/7);
 }
 
 function selectVoter(idx, btn) {
