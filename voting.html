@@ -28,12 +28,6 @@
   .voter-btn{padding:12px 14px;border-radius:10px;background:var(--surface);border:1.5px solid var(--border);color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .15s;text-align:left;}
   .voter-btn:hover{border-color:var(--accent);background:#1e1e2e;}
   .voter-btn.selected{border-color:var(--accent);background:rgba(0,229,255,.08);color:var(--accent);}
-  .result-row{display:flex;gap:10px;margin-bottom:28px;}
-  .result-btn{flex:1;padding:14px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;letter-spacing:.05em;cursor:pointer;transition:all .15s;text-align:center;text-transform:uppercase;}
-  .result-btn:hover{border-color:var(--accent);}
-  .result-btn.win{border-color:var(--green);background:rgba(34,197,94,.1);color:var(--green);}
-  .result-btn.loss{border-color:var(--red);background:rgba(239,68,68,.1);color:var(--red);}
-  .result-btn.draw{border-color:var(--yellow);background:rgba(245,158,11,.1);color:var(--yellow);}
   .players-list{display:flex;flex-direction:column;gap:12px;margin-bottom:28px;}
   .player-card{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;transition:border-color .2s;animation:slideIn .3s ease both;}
   .player-card.rated{border-color:var(--accent2);}
@@ -60,11 +54,9 @@
   .success-icon{font-size:64px;}
   .success h2{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:32px;text-transform:uppercase;}
   .success p{color:var(--muted);font-size:15px;}
-  .divider{border:none;border-top:1px solid var(--border);margin:4px 0 24px;}
   .already-voted{background:rgba(0,229,255,.06);border:1.5px solid var(--accent);border-radius:10px;padding:14px 16px;font-size:13px;color:var(--accent);margin-bottom:24px;display:none;}
   .date-chip{display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;color:var(--muted);margin-bottom:20px;}
   .loading-msg{text-align:center;color:var(--muted);font-size:14px;padding:40px 20px;}
-  .team-label{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;margin-top:4px;}
 </style>
 </head>
 <body>
@@ -83,7 +75,6 @@
     <div class="step active" id="s1"></div>
     <div class="step" id="s2"></div>
     <div class="step" id="s3"></div>
-    <div class="step" id="s4"></div>
   </div>
   <div class="already-voted" id="alreadyVoted">You have already voted this week. See you next Saturday!</div>
 
@@ -104,18 +95,7 @@
     <p style="font-size:13px;color:var(--muted);margin-bottom:6px;">Do not rate yourself. Be honest.</p>
     <div class="progress-bar"><div class="progress-fill" id="ratingProgress" style="width:0%"></div></div>
     <div class="players-list" id="playersList"></div>
-  </div>
-
-  <div id="step4" style="display:none">
-    <div class="section-title">Step 4 — Match result</div>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">How did your team do?</p>
-    <div class="result-row">
-      <button class="result-btn" onclick="selectResult('Win',this)">We Won</button>
-      <button class="result-btn" onclick="selectResult('Loss',this)">We Lost</button>
-      <button class="result-btn" onclick="selectResult('Draw',this)">Draw</button>
-    </div>
-    <hr class="divider"/>
-    <button class="submit-btn" id="submitBtn" onclick="submitVotes()" disabled>Submit Votes</button>
+    <button class="submit-btn" id="submitBtn" onclick="submitVotes()" disabled style="margin-top:16px;">Submit Votes</button>
   </div>
 </div>
 
@@ -134,7 +114,6 @@ let TEAMS = null;
 let currentVoter = null;
 let activePlayers = [];
 let ratings = {};
-let matchResult = null;
 
 async function loadPlayers() {
   try {
@@ -160,7 +139,6 @@ async function loadPlayers() {
       document.getElementById("voterGrid").innerHTML = '<div class="loading-msg">No players found. Contact admin.</div>';
     }
   } catch(e) {
-    console.error("Failed to load players:", e);
     document.getElementById("voterGrid").innerHTML = '<div class="loading-msg">Failed to load. Please refresh.</div>';
   }
 }
@@ -205,10 +183,8 @@ function goToStep2() {
 
   if (TEAMS) {
     const teamA = Array.isArray(TEAMS.teamA) ? TEAMS.teamA : TEAMS.teamA.split(",").map(n => n.trim());
-    const teamB = Array.isArray(TEAMS.teamB) ? TEAMS.teamB : TEAMS.teamB.split(",").map(n => n.trim());
     const voterName = PLAYERS[currentVoter].name;
-    const voterTeam = teamA.includes(voterName) ? teamA : teamB;
-
+    const voterTeam = teamA.includes(voterName) ? teamA : (Array.isArray(TEAMS.teamB) ? TEAMS.teamB : TEAMS.teamB.split(",").map(n => n.trim()));
     PLAYERS.forEach((p, i) => {
       const inMyTeam = voterTeam.includes(p.name);
       const isSelf = i === currentVoter;
@@ -280,28 +256,14 @@ function rate(playerIdx, value, star) {
   star.closest(".player-card").classList.add("rated");
   updateProgress();
   const toRate = activePlayers.filter(i => i !== currentVoter);
-  if (Object.keys(ratings).length === toRate.length) setTimeout(goToStep4, 600);
+  const allRated = Object.keys(ratings).length === toRate.length;
+  document.getElementById("submitBtn").disabled = !allRated;
 }
 
 function updateProgress() {
   const toRate = activePlayers.filter(i => i !== currentVoter);
   const pct = toRate.length ? (Object.keys(ratings).length / toRate.length) * 100 : 0;
   document.getElementById("ratingProgress").style.width = pct + "%";
-}
-
-function goToStep4() {
-  document.getElementById("step3").style.display = "none";
-  document.getElementById("step4").style.display = "block";
-  updateStep(4);
-}
-
-function selectResult(result, btn) {
-  matchResult = result;
-  document.querySelectorAll(".result-btn").forEach(b => b.classList.remove("win","loss","draw"));
-  if (result === "Win") btn.classList.add("win");
-  else if (result === "Loss") btn.classList.add("loss");
-  else btn.classList.add("draw");
-  document.getElementById("submitBtn").disabled = false;
 }
 
 async function submitVotes() {
@@ -311,7 +273,7 @@ async function submitVotes() {
     voter: PLAYERS[currentVoter].name,
     date: new Date().toISOString().split("T")[0],
     weekKey: getWeekKey(),
-    matchResult,
+    matchResult: "Unknown",
     activePlayers: activePlayers.map(i => PLAYERS[i].name),
     ratings: Object.fromEntries(Object.entries(ratings).map(([idx,val]) => [PLAYERS[idx].name, val]))
   };
@@ -324,7 +286,7 @@ async function submitVotes() {
 }
 
 function updateStep(n) {
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 3; i++) {
     document.getElementById("s" + i).className = "step" + (i < n ? " done" : i === n ? " active" : "");
   }
 }
