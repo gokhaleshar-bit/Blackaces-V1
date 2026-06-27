@@ -141,7 +141,7 @@ async function loadPlayers() {
     const res = await fetch(SCRIPT_URL + "?action=players");
     const data = await res.json();
     PLAYERS = data.players || [];
-    init();
+    loadPlayers();
   } catch(e) {
     console.error("Failed to load players:", e);
   }
