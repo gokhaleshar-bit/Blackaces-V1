@@ -28,7 +28,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 .ticker-name{font-weight:700;letter-spacing:.05em;color:var(--text);}
 .fl{color:var(--accent);font-weight:600;}
 .fd{color:var(--red);font-weight:600;}
-
 nav{display:flex;align-items:center;padding:0 24px;height:60px;border-bottom:1px solid var(--border);background:var(--surface);gap:16px;}
 .nav-logo{display:flex;align-items:center;gap:12px;margin-right:auto;}
 .logo-badge{width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#1a3a6a,#0d5c3a);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;font-size:13px;color:var(--accent);}
@@ -39,7 +38,6 @@ nav{display:flex;align-items:center;padding:0 24px;height:60px;border-bottom:1px
 .clock{font-family:var(--mono);font-size:12px;color:var(--muted2);}
 .nav-tab{padding:6px 14px;border-radius:6px;font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;border:1px solid transparent;color:var(--muted2);background:none;transition:all .2s;}
 .nav-tab.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent);}
-
 main{padding:20px 24px;max-width:1400px;margin:0 auto;}
 .stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
 .sc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;animation:fadeUp .4s ease both;}
@@ -48,6 +46,7 @@ main{padding:20px 24px;max-width:1400px;margin:0 auto;}
 .sc-val{font-family:var(--mono);font-size:28px;font-weight:700;color:var(--accent);line-height:1;}
 .sc-sub{font-size:11px;color:var(--muted2);margin-top:6px;}
 .sc.red .sc-val{color:var(--red);}
+.sc.yellow .sc-val{color:var(--yellow);}
 .sc.muted .sc-val{color:var(--muted2);}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .col-stack{display:flex;flex-direction:column;gap:12px;}
@@ -57,7 +56,6 @@ main{padding:20px 24px;max-width:1400px;margin:0 auto;}
 .pbadge{font-family:var(--mono);font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;}
 .pbadge.g{background:var(--accent-dim);color:var(--accent);}
 .pbadge.r{background:var(--red-dim);color:var(--red);}
-
 .lb-row{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--border);transition:background .15s;}
 .lb-row:last-child{border-bottom:none;}
 .lb-row:hover{background:var(--surface2);}
@@ -74,22 +72,17 @@ main{padding:20px 24px;max-width:1400px;margin:0 auto;}
 .lb-bar-w{width:60px;height:3px;background:var(--border);border-radius:2px;margin-top:4px;margin-left:auto;}
 .lb-bar{height:100%;border-radius:2px;background:var(--accent);}
 .pos-pill{font-size:9px;font-weight:700;letter-spacing:.08em;padding:1px 5px;border-radius:3px;background:var(--surface2);}
-
 .vote-chips{display:flex;flex-wrap:wrap;gap:6px;padding:12px 16px;}
 .vc{font-family:var(--mono);font-size:10px;font-weight:600;padding:4px 10px;border-radius:5px;letter-spacing:.05em;}
 .vc.voted{background:var(--accent-dim);color:var(--accent);border:1px solid rgba(0,255,136,.3);}
 .vc.pending{background:var(--surface2);color:var(--muted2);border:1px solid var(--border);}
-
 .view{display:none;}
 .view.active{display:block;}
-
-/* Analytics */
 .analytics-tabs{display:flex;border-bottom:1px solid var(--border);}
 .atab{flex:1;padding:10px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;text-align:center;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;transition:all .2s;}
 .atab.active{color:var(--accent);border-bottom-color:var(--accent);}
 .apanel{display:none;padding:12px 16px;}
 .apanel.active{display:block;}
-
 .form-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);}
 .form-row:last-child{border-bottom:none;}
 .form-name{font-family:var(--mono);font-size:12px;font-weight:600;}
@@ -97,37 +90,31 @@ main{padding:20px 24px;max-width:1400px;margin:0 auto;}
 .hot{color:var(--accent);}
 .cold{color:var(--red);}
 .neutral{color:var(--muted2);}
-
-.improved-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;}
-.improved-label{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
-.improved-name{font-family:var(--mono);font-size:16px;font-weight:700;color:var(--accent);margin-bottom:2px;}
-.improved-sub{font-size:11px;color:var(--muted2);}
-.improved-divider{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;}
-.improved-stat{text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:8px;}
-.improved-stat-val{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--accent);}
-.improved-stat-label{font-size:9px;color:var(--muted);margin-top:2px;}
-
+.highlight-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;}
+.highlight-label{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+.highlight-name{font-family:var(--mono);font-size:16px;font-weight:700;margin-bottom:2px;}
+.highlight-sub{font-size:11px;color:var(--muted2);}
+.highlight-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;}
+.hstat{text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:8px;}
+.hstat-val{font-family:var(--mono);font-size:14px;font-weight:700;}
+.hstat-label{font-size:9px;color:var(--muted);margin-top:2px;}
 .team-compare{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
 .team-box{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;}
 .team-box-name{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
 .team-box-avg{font-family:var(--mono);font-size:24px;font-weight:700;color:var(--accent);}
 .team-box-sub{font-size:10px;color:var(--muted2);margin-top:4px;}
 .team-winner{border-color:var(--accent);}
-
 .voter-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);}
 .voter-row:last-child{border-bottom:none;}
 .voter-name{font-family:var(--mono);font-size:11px;font-weight:600;}
 .voter-bar-wrap{flex:1;margin:0 10px;height:4px;background:var(--border);border-radius:2px;}
 .voter-bar-fill{height:100%;border-radius:2px;background:var(--accent);}
 .voter-pct{font-family:var(--mono);font-size:10px;color:var(--muted2);min-width:28px;text-align:right;}
-
-/* All time */
 .at-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px;}
 .at-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;}
 .at-card-label{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
 .at-card-val{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--accent);}
 .at-card-sub{font-size:11px;color:var(--muted2);margin-top:4px;}
-
 .games-list{display:flex;flex-direction:column;gap:4px;padding:12px 16px;}
 .game-row{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-radius:6px;background:var(--surface2);border:1px solid var(--border);}
 .game-wk{font-family:var(--mono);font-size:10px;color:var(--muted2);}
@@ -139,12 +126,10 @@ main{padding:20px 24px;max-width:1400px;margin:0 auto;}
 </style>
 </head>
 <body>
-
 <div class="ticker-wrap">
   <div class="ticker-label">BA·LIVE</div>
   <div class="ticker-track"><div class="ticker-inner" id="tickerInner"></div></div>
 </div>
-
 <nav>
   <div class="nav-logo">
     <div class="logo-badge">BA</div>
@@ -159,9 +144,7 @@ main{padding:20px 24px;max-width:1400px;margin:0 auto;}
   <button class="nav-tab" onclick="showView('alltime',this)">All Time</button>
   <button class="nav-tab" onclick="showView('audit',this)">Audit</button>
 </nav>
-
 <main>
-  <!-- THIS WEEK -->
   <div class="view active" id="view-weekly">
     <div class="stat-row" id="wStats"></div>
     <div class="g2">
@@ -189,7 +172,6 @@ main{padding:20px 24px;max-width:1400px;margin:0 auto;}
     </div>
   </div>
 
-  <!-- ALL TIME -->
   <div class="view" id="view-alltime">
     <div class="at-grid" id="atStats"></div>
     <div class="g2">
@@ -204,7 +186,6 @@ main{padding:20px 24px;max-width:1400px;margin:0 auto;}
     </div>
   </div>
 
-  <!-- AUDIT -->
   <div class="view" id="view-audit">
     <div class="g2">
       <div class="panel">
@@ -247,19 +228,18 @@ function showAnalytics(id, tab){
 
 async function loadData(){
   try {
-    const playersRes = await fetch(SCRIPT_URL + "?action=players");
-    const playersData = await playersRes.json();
-    PLAYERS = playersData.players || [];
-
-    const res = await fetch(SCRIPT_URL);
-    const weekly = await res.json();
-    const allTimeRes = await fetch(SCRIPT_URL + "?action=alltime");
+    const [playersRes, weeklyRes, allTimeRes, auditRes, teamsRes] = await Promise.all([
+      fetch(SCRIPT_URL + "?action=players"),
+      fetch(SCRIPT_URL),
+      fetch(SCRIPT_URL + "?action=alltime"),
+      fetch(SCRIPT_URL + "?action=audit"),
+      fetch(SCRIPT_URL + "?action=teams")
+    ]);
+    PLAYERS = (await playersRes.json()).players || [];
+    const weekly = await weeklyRes.json();
     const allTime = await allTimeRes.json();
-    const auditRes = await fetch(SCRIPT_URL + "?action=audit");
     const audit = await auditRes.json();
-    const teamsRes = await fetch(SCRIPT_URL + "?action=teams");
     const teams = await teamsRes.json();
-
     ALL_DATA = { weekly, allTime, audit, teams };
     renderWeekly(weekly, teams, allTime);
     renderAllTime(allTime);
@@ -276,7 +256,7 @@ function renderEmpty(){
     <div class="sc"><div class="sc-label">Votes Cast</div><div class="sc-val">0/0</div><div class="sc-sub">no votes yet</div></div>
     <div class="sc"><div class="sc-label">Avg Rating</div><div class="sc-val">—</div><div class="sc-sub">no data</div></div>
     <div class="sc"><div class="sc-label">MVP This Week</div><div class="sc-val" style="font-size:16px">—</div><div class="sc-sub">no data</div></div>
-    <div class="sc muted"><div class="sc-label">Result</div><div class="sc-val">—</div><div class="sc-sub">no data</div></div>`;
+    <div class="sc muted"><div class="sc-label">Top Rating</div><div class="sc-val">—</div><div class="sc-sub">no data</div></div>`;
 }
 
 function renderWeekly(d, teamsData, allTime){
@@ -285,12 +265,13 @@ function renderWeekly(d, teamsData, allTime){
   const top = d.players && d.players[0];
   const avgRating = d.players && d.players.length
     ? (d.players.reduce((s,p)=>s+p.avg,0)/d.players.length) : null;
-  const resultColor = d.matchResult === "Win" ? "" : d.matchResult === "Loss" ? "red" : "";
+  const topRating = d.players && d.players.length ? d.players[0].avg : null;
+
   document.getElementById("wStats").innerHTML = `
     <div class="sc" style="animation-delay:0s"><div class="sc-label">Votes Cast</div><div class="sc-val">${d.totalVoters}/${d.expectedVoters}</div><div class="sc-sub">${d.expectedVoters?Math.round(d.totalVoters/d.expectedVoters*100):0}% done</div></div>
-    <div class="sc" style="animation-delay:.05s"><div class="sc-label">Avg Rating</div><div class="sc-val">${avgRating?avgRating.toFixed(1):"—"}</div><div class="sc-sub">out of 5.0</div></div>
+    <div class="sc" style="animation-delay:.05s"><div class="sc-label">Avg Rating</div><div class="sc-val">${avgRating?avgRating.toFixed(1):"—"}</div><div class="sc-sub">squad average</div></div>
     <div class="sc" style="animation-delay:.1s"><div class="sc-label">MVP This Week</div><div class="sc-val" style="font-size:16px">${top?top.name:"—"}</div><div class="sc-sub">${top?top.avg.toFixed(1)+" ⭐":"no data"}</div></div>
-    <div class="sc ${resultColor}" style="animation-delay:.15s"><div class="sc-label">Result</div><div class="sc-val" style="font-size:18px">${d.matchResult==="Win"?"WIN":d.matchResult==="Loss"?"LOSS":d.matchResult==="Draw"?"DRAW":"—"}</div><div class="sc-sub">this week</div></div>`;
+    <div class="sc yellow" style="animation-delay:.15s"><div class="sc-label">Top Rating</div><div class="sc-val">${topRating?topRating.toFixed(1):"—"}</div><div class="sc-sub">${top?top.name+" leads":"no votes yet"}</div></div>`;
 
   const medals = ["🥇","🥈","🥉"];
   document.getElementById("wLb").innerHTML = d.players && d.players.length
@@ -317,41 +298,52 @@ function renderWeekly(d, teamsData, allTime){
 
 function renderAnalytics(weekly, teamsData, allTime){
   const players = allTime && allTime.players ? allTime.players : [];
-
-  // FORM tab — Hot/Cold + Most Improved
-  const withDelta = players.filter(p => p.delta !== 0);
-  const mostImproved = [...players].sort((a,b) => b.delta - a.delta)[0];
-  const mostDeclined = [...players].sort((a,b) => a.delta - b.delta)[0];
   const sorted = [...players].sort((a,b) => Math.abs(b.delta) - Math.abs(a.delta));
+  const mostImproved = [...players].filter(p=>p.delta>0).sort((a,b)=>b.delta-a.delta)[0];
+  const mostDeclined = [...players].filter(p=>p.delta<0).sort((a,b)=>a.delta-b.delta)[0];
+
+  // This week's best single rating (from weekly data)
+  const weeklyTop = weekly.players && weekly.players[0];
 
   let formHtml = "";
 
+  // Most Improved card
   if (mostImproved && mostImproved.delta > 0) {
-    formHtml += `
-      <div class="improved-card">
-        <div class="improved-label">🔥 Most Improved</div>
-        <div class="improved-name">${mostImproved.name}</div>
-        <div class="improved-sub">Biggest positive jump this week</div>
-        <div class="improved-divider">
-          <div class="improved-stat"><div class="improved-stat-val" style="color:var(--accent)">+${mostImproved.delta.toFixed(2)}</div><div class="improved-stat-label">Delta</div></div>
-          <div class="improved-stat"><div class="improved-stat-val">${mostImproved.avg.toFixed(2)}</div><div class="improved-stat-label">Current Avg</div></div>
-        </div>
-      </div>`;
+    formHtml += `<div class="highlight-card" style="border-color:rgba(0,255,136,.3)">
+      <div class="highlight-label">🔥 Most Improved</div>
+      <div class="highlight-name" style="color:var(--accent)">${mostImproved.name}</div>
+      <div class="highlight-sub">Biggest jump from last week</div>
+      <div class="highlight-stats">
+        <div class="hstat"><div class="hstat-val" style="color:var(--accent)">+${mostImproved.delta.toFixed(2)}</div><div class="hstat-label">Delta</div></div>
+        <div class="hstat"><div class="hstat-val">${mostImproved.avg.toFixed(2)}</div><div class="hstat-label">Current Avg</div></div>
+      </div>
+    </div>`;
+  } else if (weeklyTop) {
+    formHtml += `<div class="highlight-card" style="border-color:rgba(0,255,136,.3)">
+      <div class="highlight-label">⭐ This Week's Best</div>
+      <div class="highlight-name" style="color:var(--accent)">${weeklyTop.name}</div>
+      <div class="highlight-sub">Highest rated player this week</div>
+      <div class="highlight-stats">
+        <div class="hstat"><div class="hstat-val" style="color:var(--accent)">${weeklyTop.avg.toFixed(2)}</div><div class="hstat-label">Avg Rating</div></div>
+        <div class="hstat"><div class="hstat-val">${weeklyTop.count}</div><div class="hstat-label">Votes</div></div>
+      </div>
+    </div>`;
   }
 
+  // Biggest Drop card
   if (mostDeclined && mostDeclined.delta < 0) {
-    formHtml += `
-      <div class="improved-card" style="border-color:rgba(255,61,90,.3)">
-        <div class="improved-label" style="color:var(--red)">📉 Biggest Drop</div>
-        <div class="improved-name" style="color:var(--red)">${mostDeclined.name}</div>
-        <div class="improved-sub">Biggest negative change this week</div>
-        <div class="improved-divider">
-          <div class="improved-stat"><div class="improved-stat-val" style="color:var(--red)">${mostDeclined.delta.toFixed(2)}</div><div class="improved-stat-label">Delta</div></div>
-          <div class="improved-stat"><div class="improved-stat-val">${mostDeclined.avg.toFixed(2)}</div><div class="improved-stat-label">Current Avg</div></div>
-        </div>
-      </div>`;
+    formHtml += `<div class="highlight-card" style="border-color:rgba(255,61,90,.3)">
+      <div class="highlight-label">📉 Biggest Drop</div>
+      <div class="highlight-name" style="color:var(--red)">${mostDeclined.name}</div>
+      <div class="highlight-sub">Biggest decline from last week</div>
+      <div class="highlight-stats">
+        <div class="hstat"><div class="hstat-val" style="color:var(--red)">${mostDeclined.delta.toFixed(2)}</div><div class="hstat-label">Delta</div></div>
+        <div class="hstat"><div class="hstat-val">${mostDeclined.avg.toFixed(2)}</div><div class="hstat-label">Current Avg</div></div>
+      </div>
+    </div>`;
   }
 
+  // Form list
   formHtml += sorted.length
     ? sorted.slice(0,6).map(p => {
         const cls = p.delta > 0.2 ? "hot" : p.delta < -0.2 ? "cold" : "neutral";
@@ -376,19 +368,19 @@ function renderAnalytics(weekly, teamsData, allTime){
     };
     const avgA = getAvg(teamA);
     const avgB = getAvg(teamB);
-    const aWins = avgA && avgB ? avgA > avgB : false;
-    const bWins = avgA && avgB ? avgB > avgA : false;
+    const aWins = avgA && avgB && avgA > avgB;
+    const bWins = avgA && avgB && avgB > avgA;
     document.getElementById("apanel-teams").innerHTML = `
       <div class="team-compare">
         <div class="team-box ${aWins?"team-winner":""}">
           <div class="team-box-name">${teamsData.teams.teamAName||"Team A"}</div>
           <div class="team-box-avg">${avgA !== null ? avgA : "—"}</div>
-          <div class="team-box-sub">${aWins?"⭐ Higher rated":""} avg rating</div>
+          <div class="team-box-sub">${aWins?"⭐ Higher rated ":""}avg rating</div>
         </div>
         <div class="team-box ${bWins?"team-winner":""}">
           <div class="team-box-name">${teamsData.teams.teamBName||"Team B"}</div>
           <div class="team-box-avg">${avgB !== null ? avgB : "—"}</div>
-          <div class="team-box-sub">${bWins?"⭐ Higher rated":""} avg rating</div>
+          <div class="team-box-sub">${bWins?"⭐ Higher rated ":""}avg rating</div>
         </div>
       </div>
       <div style="font-family:var(--mono);font-size:10px;color:var(--muted)">Based on this week's votes</div>`;
@@ -408,7 +400,6 @@ function renderAnalytics(weekly, teamsData, allTime){
   }
   const votersSorted = PLAYERS.map(p => ({
     name: p.name,
-    votes: voteMap[p.name] || 0,
     pct: Math.min(Math.round(((voteMap[p.name]||0)/totalGames)*100), 100)
   })).sort((a,b) => b.pct - a.pct);
 
