@@ -237,11 +237,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:12p
 // ============================================================
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzOcAK-0mTMTZ9_MNTksv8EJO1bu7T_CxX0UmqYs4-J_C7bk0oUHZDYmxmxOi9F03qZVA/exec";
 
-const PLAYERS = [
-  { name: "Shardul", pos: "MID" },
-  { name: "Swakeet", pos: "DEF" },
-  { name: "Kavan",   pos: "FWD" },
-];
+let PLAYERS = [];
 
 const POS_COL = { GK:"#ffd166", DEF:"#3d8bff", MID:"#00ff88", FWD:"#ff3d5a" };
 
@@ -284,7 +280,9 @@ function showView(id, btn){
 }
 
 async function loadData(){
-  try {
+  try {const playersRes = await fetch(SCRIPT_URL + "?action=players");
+const playersData = await playersRes.json();
+PLAYERS = playersData.players || [];
     const res = await fetch(SCRIPT_URL);
 const weekly = await res.json();
 const allTimeRes = await fetch(SCRIPT_URL + "?action=alltime");
