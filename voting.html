@@ -295,19 +295,25 @@ async function submitVotes() {
     });
     const data = await res.json();
     if (data.error === "already_voted") {
-      showError("You have already voted this week!");
+      showError("You have already voted this week! Your original vote stands.");
       document.getElementById("submitBtn").disabled = false;
       document.getElementById("submitBtn").textContent = "Submit Votes";
       return;
     }
+    if (data.success) {
+      localStorage.setItem("voted_" + getWeekKey(), "1");
+      document.getElementById("mainForm").style.display = "none";
+      document.getElementById("successScreen").classList.add("show");
+      return;
+    }
+    showError("Something went wrong. Please try again.");
+    document.getElementById("submitBtn").disabled = false;
+    document.getElementById("submitBtn").textContent = "Submit Votes";
   } catch(e) {
-    try {
-      await fetch(SCRIPT_URL, {method:"POST", mode:"no-cors", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload)});
-    } catch(e2) {}
+    showError("Network error. Please try again.");
+    document.getElementById("submitBtn").disabled = false;
+    document.getElementById("submitBtn").textContent = "Submit Votes";
   }
-  localStorage.setItem("voted_" + getWeekKey(), "1");
-  document.getElementById("mainForm").style.display = "none";
-  document.getElementById("successScreen").classList.add("show");
 }
 
 function updateStep(n) {
