@@ -213,6 +213,7 @@ const SCRIPT_URL = "https://summer-darkness-e6f1.gokhaleshar.workers.dev";
 let PLAYERS = [];
 let ALL_DATA = {};
 const POS_COL = { GK:"#ffd166", DEF:"#3d8bff", MID:"#00ff88", FWD:"#ff3d5a" };
+const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
 
 function clock(){
   document.getElementById("clockEl").textContent =
@@ -221,24 +222,32 @@ function clock(){
 setInterval(clock,1000); clock();
 
 function getISTDate() {
+  // Always compute IST from UTC — works regardless of device timezone
+  return new Date(new Date().getTime() + IST_OFFSET_MS + (new Date().getTimezoneOffset() * 60000 * -1) - (new Date().getTimezoneOffset() * 60000 * -1));
+}
+
+function nowIST() {
   const now = new Date();
-  const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-  return new Date(utc + (5.5 * 60 * 60 * 1000));
+  // Convert to UTC first, then add IST offset
+  const utcMs = now.getTime() + (now.getTimezoneOffset() * 60000);
+  return new Date(utcMs + IST_OFFSET_MS);
 }
 
 function isResultsUnlocked() {
-  const ist = getISTDate();
+  const ist = nowIST();
   return ist.getDay() === 0 && ist.getHours() >= 8;
 }
 
 function getNextSunday8amUTC() {
-  const ist = getISTDate();
+  const ist = nowIST();
   const day = ist.getDay();
   const daysUntilSunday = day === 0 ? (ist.getHours() >= 8 ? 7 : 0) : 7 - day;
-  const targetIST = new Date(ist);
-  targetIST.setDate(ist.getDate() + daysUntilSunday);
-  targetIST.setHours(8, 0, 0, 0);
-  return new Date(targetIST.getTime() - (5.5 * 60 * 60 * 1000));
+  // Build target date in IST
+  const y = ist.getFullYear();
+  const m = ist.getMonth();
+  const d = ist.getDate() + daysUntilSunday;
+  // Sunday 8:00:00 IST as UTC
+  return new Date(Date.UTC(y, m, d, 2, 30, 0)); // 8am IST = 2:30am UTC
 }
 
 function formatCountdown(ms) {
