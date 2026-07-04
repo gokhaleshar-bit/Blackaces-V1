@@ -123,6 +123,16 @@ main{padding:20px 24px;max-width:1400px;margin:0 auto;}
 .game-result.loss{color:var(--red);}
 .game-result.draw{color:var(--yellow);}
 .game-voters{font-family:var(--mono);font-size:10px;color:var(--muted);}
+
+/* Countdown / locked screen */
+.locked-panel{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center;gap:12px;}
+.locked-icon{font-size:48px;margin-bottom:8px;}
+.locked-title{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2);}
+.countdown{display:flex;gap:16px;margin:16px 0;}
+.cd-block{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;min-width:60px;text-align:center;}
+.cd-val{font-family:var(--mono);font-size:24px;font-weight:700;color:var(--accent);}
+.cd-label{font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:4px;letter-spacing:.1em;text-transform:uppercase;}
+.locked-sub{font-size:12px;color:var(--muted);font-family:var(--mono);}
 </style>
 </head>
 <body>
@@ -150,7 +160,7 @@ main{padding:20px 24px;max-width:1400px;margin:0 auto;}
     <div class="g2">
       <div class="panel">
         <div class="phdr"><div class="ptitle">⭐ Weekly Performance Index</div><div class="pbadge g" id="wkLabel">—</div></div>
-        <div class="pbody np" id="wLb"></div>
+        <div id="wLb"></div>
       </div>
       <div class="col-stack">
         <div class="panel">
@@ -177,7 +187,7 @@ main{padding:20px 24px;max-width:1400px;margin:0 auto;}
     <div class="g2">
       <div class="panel">
         <div class="phdr"><div class="ptitle">🏆 All-Time Leaderboard</div></div>
-        <div class="pbody np" id="atLb"></div>
+        <div id="atLb"></div>
       </div>
       <div class="panel">
         <div class="phdr"><div class="ptitle">📅 Recent Games</div></div>
@@ -211,6 +221,65 @@ function clock(){
     new Date().toLocaleTimeString("en-IN",{hour12:false,timeZone:"Asia/Kolkata"})+" IST";
 }
 setInterval(clock,1000); clock();
+
+function isResultsUnlocked() {
+  const now = new Date();
+  const istOffset = 5.5 * 60 * 60 * 1000;
+  const ist = new Date(now.getTime() + istOffset);
+  // Unlocked if it's Sunday 8am IST or later
+  return ist.getDay() === 0 && ist.getHours() >= 8;
+}
+
+function getNextSunday8am() {
+  const now = new Date();
+  const istOffset = 5.5 * 60 * 60 * 1000;
+  const ist = new Date(now.getTime() + istOffset);
+  const day = ist.getDay();
+  const daysUntilSunday = day === 0 ? 7 : 7 - day;
+  const nextSunday = new Date(ist);
+  nextSunday.setDate(ist.getDate() + (day === 0 && ist.getHours() >= 8 ? 0 : daysUntilSunday));
+  nextSunday.setHours(8, 0, 0, 0);
+  return new Date(nextSunday.getTime() - istOffset);
+}
+
+function formatCountdown(ms) {
+  const totalSecs = Math.max(0, Math.floor(ms / 1000));
+  const hours = Math.floor(totalSecs / 3600);
+  const mins = Math.floor((totalSecs % 3600) / 60);
+  const secs = totalSecs % 60;
+  return { hours, mins, secs };
+}
+
+function renderCountdown() {
+  const target = getNextSunday8am();
+  const ms = target - new Date();
+  const { hours, mins, secs } = formatCountdown(ms);
+  return `<div class="locked-panel">
+    <div class="locked-icon">🔒</div>
+    <div class="locked-title">Results drop Sunday 8:00 AM IST</div>
+    <div class="countdown">
+      <div class="cd-block"><div class="cd-val" id="cd-h">${String(hours).padStart(2,"0")}</div><div class="cd-label">Hours</div></div>
+      <div class="cd-block"><div class="cd-val" id="cd-m">${String(mins).padStart(2,"0")}</div><div class="cd-label">Mins</div></div>
+      <div class="cd-block"><div class="cd-val" id="cd-s">${String(secs).padStart(2,"0")}</div><div class="cd-label">Secs</div></div>
+    </div>
+    <div class="locked-sub">Vote now while you still can 👆</div>
+  </div>`;
+}
+
+function startCountdownTick() {
+  setInterval(() => {
+    if (isResultsUnlocked()) { location.reload(); return; }
+    const target = getNextSunday8am();
+    const ms = target - new Date();
+    const { hours, mins, secs } = formatCountdown(ms);
+    const h = document.getElementById("cd-h");
+    const m = document.getElementById("cd-m");
+    const s = document.getElementById("cd-s");
+    if (h) h.textContent = String(hours).padStart(2,"0");
+    if (m) m.textContent = String(mins).padStart(2,"0");
+    if (s) s.textContent = String(secs).padStart(2,"0");
+  }, 1000);
+}
 
 function showView(id, btn){
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
@@ -247,118 +316,111 @@ async function loadData(){
     buildTicker(allTime && allTime.players);
   } catch(e) {
     console.error("Dashboard load failed:", e);
-    renderEmpty();
   }
 }
 
-function renderEmpty(){
-  document.getElementById("wStats").innerHTML = `
-    <div class="sc"><div class="sc-label">Votes Cast</div><div class="sc-val">0/0</div><div class="sc-sub">no votes yet</div></div>
-    <div class="sc"><div class="sc-label">Avg Rating</div><div class="sc-val">—</div><div class="sc-sub">no data</div></div>
-    <div class="sc"><div class="sc-label">MVP This Week</div><div class="sc-val" style="font-size:16px">—</div><div class="sc-sub">no data</div></div>
-    <div class="sc muted"><div class="sc-label">Top Rating</div><div class="sc-val">—</div><div class="sc-sub">no data</div></div>`;
-}
-
 function renderWeekly(d, teamsData, allTime){
-  if (!d) { renderEmpty(); return; }
+  if (!d) return;
   document.getElementById("wkLabel").textContent = d.weekKey || "—";
+  const unlocked = isResultsUnlocked();
   const top = d.players && d.players[0];
   const avgRating = d.players && d.players.length
     ? (d.players.reduce((s,p)=>s+p.avg,0)/d.players.length) : null;
-  const topRating = d.players && d.players.length ? d.players[0].avg : null;
 
+  // Stat cards — always show vote count, hide ratings until unlocked
   document.getElementById("wStats").innerHTML = `
     <div class="sc" style="animation-delay:0s"><div class="sc-label">Votes Cast</div><div class="sc-val">${d.totalVoters}/${d.expectedVoters}</div><div class="sc-sub">${d.expectedVoters?Math.round(d.totalVoters/d.expectedVoters*100):0}% done</div></div>
-    <div class="sc" style="animation-delay:.05s"><div class="sc-label">Avg Rating</div><div class="sc-val">${avgRating?avgRating.toFixed(1):"—"}</div><div class="sc-sub">squad average</div></div>
-    <div class="sc" style="animation-delay:.1s"><div class="sc-label">MVP This Week</div><div class="sc-val" style="font-size:16px">${top?top.name:"—"}</div><div class="sc-sub">${top?top.avg.toFixed(1)+" ⭐":"no data"}</div></div>
-    <div class="sc yellow" style="animation-delay:.15s"><div class="sc-label">Top Rating</div><div class="sc-val">${topRating?topRating.toFixed(1):"—"}</div><div class="sc-sub">${top?top.name+" leads":"no votes yet"}</div></div>`;
+    <div class="sc" style="animation-delay:.05s"><div class="sc-label">Avg Rating</div><div class="sc-val">${unlocked?(avgRating?avgRating.toFixed(1):"—"):"🔒"}</div><div class="sc-sub">${unlocked?"squad average":"unlocks Sunday 8am"}</div></div>
+    <div class="sc" style="animation-delay:.1s"><div class="sc-label">MVP This Week</div><div class="sc-val" style="font-size:${unlocked?"16px":"28px"}">${unlocked?(top?top.name:"—"):"🔒"}</div><div class="sc-sub">${unlocked?(top?top.avg.toFixed(1)+" ⭐":"no data"):"unlocks Sunday 8am"}</div></div>
+    <div class="sc yellow" style="animation-delay:.15s"><div class="sc-label">Top Rating</div><div class="sc-val">${unlocked?(top?top.avg.toFixed(1):"—"):"🔒"}</div><div class="sc-sub">${unlocked?(top?top.name+" leads":"no votes yet"):"unlocks Sunday 8am"}</div></div>`;
 
-  const medals = ["🥇","🥈","🥉"];
-  document.getElementById("wLb").innerHTML = d.players && d.players.length
-    ? d.players.map((p,i) => `<div class="lb-row" style="animation-delay:${i*.06}s">
-        <div class="lb-rank ${i===0?"g":i===1?"s":i===2?"b":""}">${medals[i]||i+1}</div>
-        <div class="lb-info">
-          <div class="lb-name">${p.name}<span class="pos-pill" style="color:${POS_COL[PLAYERS.find(x=>x.name===p.name)?.pos]||"#fff"}">${PLAYERS.find(x=>x.name===p.name)?.pos||""}</span></div>
-          <div class="lb-meta">${p.count} votes</div>
-        </div>
-        <div class="lb-right">
-          <div class="lb-score up">${p.avg.toFixed(1)}</div>
-          <div class="lb-bar-w"><div class="lb-bar" style="width:${p.avg/5*100}%"></div></div>
-        </div>
-      </div>`).join("")
-    : `<div style="padding:30px 15px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--muted)">No votes yet.</div>`;
+  // Leaderboard — locked or unlocked
+  document.getElementById("wLb").innerHTML = unlocked
+    ? (d.players && d.players.length
+        ? d.players.map((p,i) => {
+            const medals = ["🥇","🥈","🥉"];
+            return `<div class="lb-row" style="animation-delay:${i*.06}s">
+              <div class="lb-rank ${i===0?"g":i===1?"s":i===2?"b":""}">${medals[i]||i+1}</div>
+              <div class="lb-info">
+                <div class="lb-name">${p.name}<span class="pos-pill" style="color:${POS_COL[PLAYERS.find(x=>x.name===p.name)?.pos]||"#fff"}">${PLAYERS.find(x=>x.name===p.name)?.pos||""}</span></div>
+                <div class="lb-meta">${p.count} votes</div>
+              </div>
+              <div class="lb-right">
+                <div class="lb-score up">${p.avg.toFixed(1)}</div>
+                <div class="lb-bar-w"><div class="lb-bar" style="width:${p.avg/5*100}%"></div></div>
+              </div>
+            </div>`;
+          }).join("")
+        : `<div style="padding:30px 15px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--muted)">No votes yet.</div>`)
+    : renderCountdown();
 
+  if (!unlocked) startCountdownTick();
+
+  // Vote tracker — always visible
   const votedSet = new Set(d.voters||[]);
   document.getElementById("vChips").innerHTML = `<div class="vote-chips">${PLAYERS.map(p=>`<span class="vc ${votedSet.has(p.name)?"voted":"pending"}">${votedSet.has(p.name)?"✓ ":""}${p.name}</span>`).join("")}</div>`;
   document.getElementById("vtBadge").textContent = `${d.totalVoters}/${d.expectedVoters}`;
   document.getElementById("vtBadge").className = `pbadge ${d.totalVoters===d.expectedVoters?"g":"r"}`;
 
-  renderAnalytics(d, teamsData, allTime);
+  renderAnalytics(d, teamsData, allTime, unlocked);
 }
 
-function renderAnalytics(weekly, teamsData, allTime){
+function renderAnalytics(weekly, teamsData, allTime, unlocked){
   const players = allTime && allTime.players ? allTime.players : [];
-  const sorted = [...players].sort((a,b) => Math.abs(b.delta) - Math.abs(a.delta));
   const mostImproved = [...players].filter(p=>p.delta>0).sort((a,b)=>b.delta-a.delta)[0];
   const mostDeclined = [...players].filter(p=>p.delta<0).sort((a,b)=>a.delta-b.delta)[0];
-
-  // This week's best single rating (from weekly data)
   const weeklyTop = weekly.players && weekly.players[0];
+  const sorted = [...players].sort((a,b) => Math.abs(b.delta) - Math.abs(a.delta));
 
+  // Form tab
   let formHtml = "";
-
-  // Most Improved card
-  if (mostImproved && mostImproved.delta > 0) {
-    formHtml += `<div class="highlight-card" style="border-color:rgba(0,255,136,.3)">
-      <div class="highlight-label">🔥 Most Improved</div>
-      <div class="highlight-name" style="color:var(--accent)">${mostImproved.name}</div>
-      <div class="highlight-sub">Biggest jump from last week</div>
-      <div class="highlight-stats">
-        <div class="hstat"><div class="hstat-val" style="color:var(--accent)">+${mostImproved.delta.toFixed(2)}</div><div class="hstat-label">Delta</div></div>
-        <div class="hstat"><div class="hstat-val">${mostImproved.avg.toFixed(2)}</div><div class="hstat-label">Current Avg</div></div>
-      </div>
-    </div>`;
-  } else if (weeklyTop) {
-    formHtml += `<div class="highlight-card" style="border-color:rgba(0,255,136,.3)">
-      <div class="highlight-label">⭐ This Week's Best</div>
-      <div class="highlight-name" style="color:var(--accent)">${weeklyTop.name}</div>
-      <div class="highlight-sub">Highest rated player this week</div>
-      <div class="highlight-stats">
-        <div class="hstat"><div class="hstat-val" style="color:var(--accent)">${weeklyTop.avg.toFixed(2)}</div><div class="hstat-label">Avg Rating</div></div>
-        <div class="hstat"><div class="hstat-val">${weeklyTop.count}</div><div class="hstat-label">Votes</div></div>
-      </div>
-    </div>`;
+  if (!unlocked) {
+    formHtml = `<div style="text-align:center;padding:20px;font-family:var(--mono);font-size:11px;color:var(--muted)">🔒 Form guide unlocks Sunday 8am IST</div>`;
+  } else {
+    if (mostImproved) {
+      formHtml += `<div class="highlight-card" style="border-color:rgba(0,255,136,.3)">
+        <div class="highlight-label">🔥 Most Improved</div>
+        <div class="highlight-name" style="color:var(--accent)">${mostImproved.name}</div>
+        <div class="highlight-sub">Biggest jump from last week</div>
+        <div class="highlight-stats">
+          <div class="hstat"><div class="hstat-val" style="color:var(--accent)">+${mostImproved.delta.toFixed(2)}</div><div class="hstat-label">Delta</div></div>
+          <div class="hstat"><div class="hstat-val">${mostImproved.avg.toFixed(2)}</div><div class="hstat-label">Current Avg</div></div>
+        </div>
+      </div>`;
+    } else if (weeklyTop) {
+      formHtml += `<div class="highlight-card" style="border-color:rgba(0,255,136,.3)">
+        <div class="highlight-label">⭐ This Week's Best</div>
+        <div class="highlight-name" style="color:var(--accent)">${weeklyTop.name}</div>
+        <div class="highlight-sub">Highest rated player this week</div>
+        <div class="highlight-stats">
+          <div class="hstat"><div class="hstat-val" style="color:var(--accent)">${weeklyTop.avg.toFixed(2)}</div><div class="hstat-label">Avg Rating</div></div>
+          <div class="hstat"><div class="hstat-val">${weeklyTop.count}</div><div class="hstat-label">Votes</div></div>
+        </div>
+      </div>`;
+    }
+    if (mostDeclined) {
+      formHtml += `<div class="highlight-card" style="border-color:rgba(255,61,90,.3)">
+        <div class="highlight-label">📉 Biggest Drop</div>
+        <div class="highlight-name" style="color:var(--red)">${mostDeclined.name}</div>
+        <div class="highlight-sub">Biggest decline from last week</div>
+        <div class="highlight-stats">
+          <div class="hstat"><div class="hstat-val" style="color:var(--red)">${mostDeclined.delta.toFixed(2)}</div><div class="hstat-label">Delta</div></div>
+          <div class="hstat"><div class="hstat-val">${mostDeclined.avg.toFixed(2)}</div><div class="hstat-label">Current Avg</div></div>
+        </div>
+      </div>`;
+    }
+    formHtml += sorted.length
+      ? sorted.slice(0,6).map(p => {
+          const cls = p.delta > 0.2 ? "hot" : p.delta < -0.2 ? "cold" : "neutral";
+          const arrow = p.delta > 0.2 ? "↑" : p.delta < -0.2 ? "↓" : "→";
+          const label = p.delta > 0.2 ? "Hot" : p.delta < -0.2 ? "Cold" : "Stable";
+          return `<div class="form-row"><span class="form-name">${p.name}</span><span class="form-delta ${cls}">${arrow} ${label} (${p.delta>0?"+":""}${p.delta.toFixed(2)})</span></div>`;
+        }).join("")
+      : `<div style="color:var(--muted);font-size:11px;font-family:var(--mono);padding:8px 0">Need 2+ weeks of data</div>`;
   }
-
-  // Biggest Drop card
-  if (mostDeclined && mostDeclined.delta < 0) {
-    formHtml += `<div class="highlight-card" style="border-color:rgba(255,61,90,.3)">
-      <div class="highlight-label">📉 Biggest Drop</div>
-      <div class="highlight-name" style="color:var(--red)">${mostDeclined.name}</div>
-      <div class="highlight-sub">Biggest decline from last week</div>
-      <div class="highlight-stats">
-        <div class="hstat"><div class="hstat-val" style="color:var(--red)">${mostDeclined.delta.toFixed(2)}</div><div class="hstat-label">Delta</div></div>
-        <div class="hstat"><div class="hstat-val">${mostDeclined.avg.toFixed(2)}</div><div class="hstat-label">Current Avg</div></div>
-      </div>
-    </div>`;
-  }
-
-  // Form list
-  formHtml += sorted.length
-    ? sorted.slice(0,6).map(p => {
-        const cls = p.delta > 0.2 ? "hot" : p.delta < -0.2 ? "cold" : "neutral";
-        const arrow = p.delta > 0.2 ? "↑" : p.delta < -0.2 ? "↓" : "→";
-        const label = p.delta > 0.2 ? "Hot" : p.delta < -0.2 ? "Cold" : "Stable";
-        return `<div class="form-row">
-          <span class="form-name">${p.name}</span>
-          <span class="form-delta ${cls}">${arrow} ${label} (${p.delta>0?"+":""}${p.delta.toFixed(2)})</span>
-        </div>`;
-      }).join("")
-    : `<div style="color:var(--muted);font-size:11px;font-family:var(--mono);padding:8px 0">Need 2+ weeks of data for form guide</div>`;
-
   document.getElementById("apanel-form").innerHTML = formHtml;
 
-  // TEAMS tab
+  // Teams tab — always visible
   if (teamsData && teamsData.teams && weekly.players && weekly.players.length) {
     const teamA = Array.isArray(teamsData.teams.teamA) ? teamsData.teams.teamA : teamsData.teams.teamA.split(",").map(n=>n.trim());
     const teamB = Array.isArray(teamsData.teams.teamB) ? teamsData.teams.teamB : teamsData.teams.teamB.split(",").map(n=>n.trim());
@@ -366,29 +428,29 @@ function renderAnalytics(weekly, teamsData, allTime){
       const rated = weekly.players.filter(p => team.includes(p.name));
       return rated.length ? +(rated.reduce((s,p)=>s+p.avg,0)/rated.length).toFixed(2) : null;
     };
-    const avgA = getAvg(teamA);
-    const avgB = getAvg(teamB);
+    const avgA = unlocked ? getAvg(teamA) : null;
+    const avgB = unlocked ? getAvg(teamB) : null;
     const aWins = avgA && avgB && avgA > avgB;
     const bWins = avgA && avgB && avgB > avgA;
     document.getElementById("apanel-teams").innerHTML = `
       <div class="team-compare">
         <div class="team-box ${aWins?"team-winner":""}">
           <div class="team-box-name">${teamsData.teams.teamAName||"Team A"}</div>
-          <div class="team-box-avg">${avgA !== null ? avgA : "—"}</div>
-          <div class="team-box-sub">${aWins?"⭐ Higher rated ":""}avg rating</div>
+          <div class="team-box-avg">${unlocked?(avgA !== null ? avgA : "—"):"🔒"}</div>
+          <div class="team-box-sub">${unlocked?(aWins?"⭐ Higher rated ":"")+"avg rating":"unlocks Sunday 8am"}</div>
         </div>
         <div class="team-box ${bWins?"team-winner":""}">
           <div class="team-box-name">${teamsData.teams.teamBName||"Team B"}</div>
-          <div class="team-box-avg">${avgB !== null ? avgB : "—"}</div>
-          <div class="team-box-sub">${bWins?"⭐ Higher rated ":""}avg rating</div>
+          <div class="team-box-avg">${unlocked?(avgB !== null ? avgB : "—"):"🔒"}</div>
+          <div class="team-box-sub">${unlocked?(bWins?"⭐ Higher rated ":"")+"avg rating":"unlocks Sunday 8am"}</div>
         </div>
       </div>
-      <div style="font-family:var(--mono);font-size:10px;color:var(--muted)">Based on this week's votes</div>`;
+      <div style="font-family:var(--mono);font-size:10px;color:var(--muted)">${unlocked?"Based on this week's votes":"Results hidden until Sunday 8am IST"}</div>`;
   } else {
     document.getElementById("apanel-teams").innerHTML = `<div style="color:var(--muted);font-size:11px;font-family:var(--mono);padding:8px 0">Paste teams in Telegram first</div>`;
   }
 
-  // VOTERS tab
+  // Voters tab — always visible
   const totalGames = allTime && allTime.recentGames ? Math.max(allTime.recentGames.length, 1) : 1;
   const voteMap = {};
   if (ALL_DATA.audit && ALL_DATA.audit.auditLog) {
@@ -402,7 +464,6 @@ function renderAnalytics(weekly, teamsData, allTime){
     name: p.name,
     pct: Math.min(Math.round(((voteMap[p.name]||0)/totalGames)*100), 100)
   })).sort((a,b) => b.pct - a.pct);
-
   document.getElementById("apanel-voters").innerHTML = votersSorted.map(p => `
     <div class="voter-row">
       <span class="voter-name">${p.name}</span>
@@ -413,45 +474,40 @@ function renderAnalytics(weekly, teamsData, allTime){
 
 function renderAllTime(d){
   if (!d || !d.players || !d.players.length) return;
+  const unlocked = isResultsUnlocked();
   const top = d.players[0];
   const totalGames = d.recentGames ? d.recentGames.length : 0;
   const wins = d.recentGames ? d.recentGames.filter(g=>g.result==="Win").length : 0;
   const mostImproved = [...d.players].filter(p=>p.delta>0).sort((a,b)=>b.delta-a.delta)[0];
   document.getElementById("atStats").innerHTML = `
-    <div class="at-card"><div class="at-card-label">All-Time MVP</div><div class="at-card-val">${top.name}</div><div class="at-card-sub">${top.avg} avg ⭐</div></div>
+    <div class="at-card"><div class="at-card-label">All-Time MVP</div><div class="at-card-val">${unlocked?top.name:"🔒"}</div><div class="at-card-sub">${unlocked?top.avg+" avg ⭐":"unlocks Sunday 8am"}</div></div>
     <div class="at-card"><div class="at-card-label">Games Tracked</div><div class="at-card-val">${totalGames}</div><div class="at-card-sub">this season</div></div>
     <div class="at-card"><div class="at-card-label">Win Rate</div><div class="at-card-val">${totalGames?Math.round(wins/totalGames*100):0}%</div><div class="at-card-sub">${wins} wins of ${totalGames}</div></div>
-    <div class="at-card"><div class="at-card-label">Most Improved</div><div class="at-card-val" style="font-size:16px">${mostImproved?mostImproved.name:"—"}</div><div class="at-card-sub">${mostImproved?"+"+mostImproved.delta.toFixed(2)+" this week":"need 2+ weeks"}</div></div>`;
+    <div class="at-card"><div class="at-card-label">Most Improved</div><div class="at-card-val" style="font-size:16px">${unlocked?(mostImproved?mostImproved.name:"—"):"🔒"}</div><div class="at-card-sub">${unlocked?(mostImproved?"+"+mostImproved.delta.toFixed(2)+" this week":"need 2+ weeks"):"unlocks Sunday 8am"}</div></div>`;
 
-  const medals = ["🥇","🥈","🥉"];
-  document.getElementById("atLb").innerHTML = d.players.map((p,i) => {
-    const deltaStr = p.delta > 0
-      ? `<span style="color:var(--accent)">+${p.delta}</span>`
-      : p.delta < 0
-      ? `<span style="color:var(--red)">${p.delta}</span>`
-      : `<span style="color:var(--muted)">—</span>`;
-    return `<div class="lb-row">
-      <div class="lb-rank ${i===0?"g":i===1?"s":i===2?"b":""}">${medals[i]||i+1}</div>
-      <div class="lb-info">
-        <div class="lb-name">${p.name}<span class="pos-pill" style="color:${POS_COL[PLAYERS.find(x=>x.name===p.name)?.pos]||"#fff"}">${PLAYERS.find(x=>x.name===p.name)?.pos||""}</span></div>
-        <div class="lb-meta">${p.gamesPlayed} games · ${p.count} ratings · trend ${deltaStr}</div>
-      </div>
-      <div class="lb-right">
-        <div class="lb-score up">${p.avg.toFixed(1)}</div>
-        <div class="lb-bar-w"><div class="lb-bar" style="width:${p.avg/5*100}%"></div></div>
-      </div>
-    </div>`;
-  }).join("");
+  document.getElementById("atLb").innerHTML = unlocked
+    ? d.players.map((p,i) => {
+        const medals = ["🥇","🥈","🥉"];
+        const deltaStr = p.delta > 0 ? `<span style="color:var(--accent)">+${p.delta}</span>` : p.delta < 0 ? `<span style="color:var(--red)">${p.delta}</span>` : `<span style="color:var(--muted)">—</span>`;
+        return `<div class="lb-row">
+          <div class="lb-rank ${i===0?"g":i===1?"s":i===2?"b":""}">${medals[i]||i+1}</div>
+          <div class="lb-info">
+            <div class="lb-name">${p.name}<span class="pos-pill" style="color:${POS_COL[PLAYERS.find(x=>x.name===p.name)?.pos]||"#fff"}">${PLAYERS.find(x=>x.name===p.name)?.pos||""}</span></div>
+            <div class="lb-meta">${p.gamesPlayed} games · ${p.count} ratings · trend ${deltaStr}</div>
+          </div>
+          <div class="lb-right">
+            <div class="lb-score up">${p.avg.toFixed(1)}</div>
+            <div class="lb-bar-w"><div class="lb-bar" style="width:${p.avg/5*100}%"></div></div>
+          </div>
+        </div>`;
+      }).join("")
+    : `<div class="locked-panel"><div class="locked-icon">🔒</div><div class="locked-title">Leaderboard unlocks Sunday 8am IST</div><div class="locked-sub">Keep voting!</div></div>`;
 
   if (d.recentGames) {
     document.getElementById("recentGames").innerHTML = d.recentGames.map(g => {
       const cls = g.result==="Win"?"win":g.result==="Loss"?"loss":"draw";
       const label = g.result==="Win"?"WIN":g.result==="Loss"?"LOSS":g.result==="Draw"?"DRAW":"—";
-      return `<div class="game-row">
-        <span class="game-wk">${g.weekKey}</span>
-        <span class="game-result ${cls}">${label}</span>
-        <span class="game-voters">${g.voters} voters</span>
-      </div>`;
+      return `<div class="game-row"><span class="game-wk">${g.weekKey}</span><span class="game-result ${cls}">${label}</span><span class="game-voters">${g.voters} voters</span></div>`;
     }).join("");
   }
 }
@@ -470,7 +526,12 @@ function renderAudit(d){
 
 function buildTicker(players){
   if (!players || !players.length) {
-    document.getElementById("tickerInner").innerHTML = '<div class="ticker-item"><span class="ticker-name">No data yet</span></div>';
+    document.getElementById("tickerInner").innerHTML = '<div class="ticker-item"><span class="ticker-name">Results drop Sunday 8am IST</span></div>';
+    return;
+  }
+  const unlocked = isResultsUnlocked();
+  if (!unlocked) {
+    document.getElementById("tickerInner").innerHTML = '<div class="ticker-item"><span class="ticker-name">🔒 Results drop Sunday 8am IST — vote now!</span></div>';
     return;
   }
   const items = players.map(p => `<div class="ticker-item">
