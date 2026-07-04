@@ -123,8 +123,6 @@ main{padding:20px 24px;max-width:1400px;margin:0 auto;}
 .game-result.loss{color:var(--red);}
 .game-result.draw{color:var(--yellow);}
 .game-voters{font-family:var(--mono);font-size:10px;color:var(--muted);}
-
-/* Countdown / locked screen */
 .locked-panel{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center;gap:12px;}
 .locked-icon{font-size:48px;margin-bottom:8px;}
 .locked-title{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2);}
@@ -226,7 +224,6 @@ function isResultsUnlocked() {
   const now = new Date();
   const istOffset = 5.5 * 60 * 60 * 1000;
   const ist = new Date(now.getTime() + istOffset);
-  // Unlocked if it's Sunday 8am IST or later
   return ist.getDay() === 0 && ist.getHours() >= 8;
 }
 
@@ -235,9 +232,9 @@ function getNextSunday8am() {
   const istOffset = 5.5 * 60 * 60 * 1000;
   const ist = new Date(now.getTime() + istOffset);
   const day = ist.getDay();
-  const daysUntilSunday = day === 0 ? 7 : 7 - day;
   const nextSunday = new Date(ist);
-  nextSunday.setDate(ist.getDate() + (day === 0 && ist.getHours() >= 8 ? 0 : daysUntilSunday));
+  const daysUntilSunday = day === 0 && ist.getHours() < 8 ? 0 : (7 - day) % 7 || 7;
+  nextSunday.setDate(ist.getDate() + daysUntilSunday);
   nextSunday.setHours(8, 0, 0, 0);
   return new Date(nextSunday.getTime() - istOffset);
 }
@@ -267,8 +264,8 @@ function renderCountdown() {
 }
 
 function startCountdownTick() {
-  setInterval(() => {
-    if (isResultsUnlocked()) { location.reload(); return; }
+  const interval = setInterval(() => {
+    if (isResultsUnlocked()) { clearInterval(interval); location.reload(); return; }
     const target = getNextSunday8am();
     const ms = target - new Date();
     const { hours, mins, secs } = formatCountdown(ms);
@@ -327,14 +324,12 @@ function renderWeekly(d, teamsData, allTime){
   const avgRating = d.players && d.players.length
     ? (d.players.reduce((s,p)=>s+p.avg,0)/d.players.length) : null;
 
-  // Stat cards — always show vote count, hide ratings until unlocked
   document.getElementById("wStats").innerHTML = `
     <div class="sc" style="animation-delay:0s"><div class="sc-label">Votes Cast</div><div class="sc-val">${d.totalVoters}/${d.expectedVoters}</div><div class="sc-sub">${d.expectedVoters?Math.round(d.totalVoters/d.expectedVoters*100):0}% done</div></div>
     <div class="sc" style="animation-delay:.05s"><div class="sc-label">Avg Rating</div><div class="sc-val">${unlocked?(avgRating?avgRating.toFixed(1):"—"):"🔒"}</div><div class="sc-sub">${unlocked?"squad average":"unlocks Sunday 8am"}</div></div>
     <div class="sc" style="animation-delay:.1s"><div class="sc-label">MVP This Week</div><div class="sc-val" style="font-size:${unlocked?"16px":"28px"}">${unlocked?(top?top.name:"—"):"🔒"}</div><div class="sc-sub">${unlocked?(top?top.avg.toFixed(1)+" ⭐":"no data"):"unlocks Sunday 8am"}</div></div>
     <div class="sc yellow" style="animation-delay:.15s"><div class="sc-label">Top Rating</div><div class="sc-val">${unlocked?(top?top.avg.toFixed(1):"—"):"🔒"}</div><div class="sc-sub">${unlocked?(top?top.name+" leads":"no votes yet"):"unlocks Sunday 8am"}</div></div>`;
 
-  // Leaderboard — locked or unlocked
   document.getElementById("wLb").innerHTML = unlocked
     ? (d.players && d.players.length
         ? d.players.map((p,i) => {
@@ -356,9 +351,11 @@ function renderWeekly(d, teamsData, allTime){
 
   if (!unlocked) startCountdownTick();
 
-  // Vote tracker — always visible
+  // Vote tracker — only show this week's players
   const votedSet = new Set(d.voters||[]);
-  document.getElementById("vChips").innerHTML = `<div class="vote-chips">${PLAYERS.map(p=>`<span class="vc ${votedSet.has(p.name)?"voted":"pending"}">${votedSet.has(p.name)?"✓ ":""}${p.name}</span>`).join("")}</div>`;
+  const thisWeekNames = new Set([...(d.voters||[]), ...(d.pendingVoters||[])]);
+  const thisWeekPlayers = PLAYERS.filter(p => thisWeekNames.has(p.name));
+  document.getElementById("vChips").innerHTML = `<div class="vote-chips">${thisWeekPlayers.map(p=>`<span class="vc ${votedSet.has(p.name)?"voted":"pending"}">${votedSet.has(p.name)?"✓ ":""}${p.name}</span>`).join("")}</div>`;
   document.getElementById("vtBadge").textContent = `${d.totalVoters}/${d.expectedVoters}`;
   document.getElementById("vtBadge").className = `pbadge ${d.totalVoters===d.expectedVoters?"g":"r"}`;
 
@@ -420,7 +417,7 @@ function renderAnalytics(weekly, teamsData, allTime, unlocked){
   }
   document.getElementById("apanel-form").innerHTML = formHtml;
 
-  // Teams tab — always visible
+  // Teams tab
   if (teamsData && teamsData.teams && weekly.players && weekly.players.length) {
     const teamA = Array.isArray(teamsData.teams.teamA) ? teamsData.teams.teamA : teamsData.teams.teamA.split(",").map(n=>n.trim());
     const teamB = Array.isArray(teamsData.teams.teamB) ? teamsData.teams.teamB : teamsData.teams.teamB.split(",").map(n=>n.trim());
@@ -436,12 +433,12 @@ function renderAnalytics(weekly, teamsData, allTime, unlocked){
       <div class="team-compare">
         <div class="team-box ${aWins?"team-winner":""}">
           <div class="team-box-name">${teamsData.teams.teamAName||"Team A"}</div>
-          <div class="team-box-avg">${unlocked?(avgA !== null ? avgA : "—"):"🔒"}</div>
+          <div class="team-box-avg">${unlocked?(avgA!==null?avgA:"—"):"🔒"}</div>
           <div class="team-box-sub">${unlocked?(aWins?"⭐ Higher rated ":"")+"avg rating":"unlocks Sunday 8am"}</div>
         </div>
         <div class="team-box ${bWins?"team-winner":""}">
           <div class="team-box-name">${teamsData.teams.teamBName||"Team B"}</div>
-          <div class="team-box-avg">${unlocked?(avgB !== null ? avgB : "—"):"🔒"}</div>
+          <div class="team-box-avg">${unlocked?(avgB!==null?avgB:"—"):"🔒"}</div>
           <div class="team-box-sub">${unlocked?(bWins?"⭐ Higher rated ":"")+"avg rating":"unlocks Sunday 8am"}</div>
         </div>
       </div>
@@ -460,7 +457,9 @@ function renderAnalytics(weekly, teamsData, allTime, unlocked){
       voteMap[voter]++;
     });
   }
-  const votersSorted = PLAYERS.map(p => ({
+  const thisWeekNames = new Set([...(weekly.voters||[]), ...(weekly.pendingVoters||[])]);
+  const thisWeekPlayers = PLAYERS.filter(p => thisWeekNames.has(p.name));
+  const votersSorted = thisWeekPlayers.map(p => ({
     name: p.name,
     pct: Math.min(Math.round(((voteMap[p.name]||0)/totalGames)*100), 100)
   })).sort((a,b) => b.pct - a.pct);
@@ -525,13 +524,13 @@ function renderAudit(d){
 }
 
 function buildTicker(players){
-  if (!players || !players.length) {
-    document.getElementById("tickerInner").innerHTML = '<div class="ticker-item"><span class="ticker-name">Results drop Sunday 8am IST</span></div>';
-    return;
-  }
   const unlocked = isResultsUnlocked();
   if (!unlocked) {
     document.getElementById("tickerInner").innerHTML = '<div class="ticker-item"><span class="ticker-name">🔒 Results drop Sunday 8am IST — vote now!</span></div>';
+    return;
+  }
+  if (!players || !players.length) {
+    document.getElementById("tickerInner").innerHTML = '<div class="ticker-item"><span class="ticker-name">No data yet</span></div>';
     return;
   }
   const items = players.map(p => `<div class="ticker-item">
