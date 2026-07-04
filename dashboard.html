@@ -220,23 +220,24 @@ function clock(){
 }
 setInterval(clock,1000); clock();
 
+function getISTDate() {
+  return new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+}
+
 function isResultsUnlocked() {
-  const now = new Date();
-  const istOffset = 5.5 * 60 * 60 * 1000;
-  const ist = new Date(now.getTime() + istOffset);
+  const ist = getISTDate();
   return ist.getDay() === 0 && ist.getHours() >= 8;
 }
 
-function getNextSunday8am() {
-  const now = new Date();
-  const istOffset = 5.5 * 60 * 60 * 1000;
-  const ist = new Date(now.getTime() + istOffset);
+function getNextSunday8amUTC() {
+  const ist = getISTDate();
   const day = ist.getDay();
-  const nextSunday = new Date(ist);
-  const daysUntilSunday = day === 0 && ist.getHours() < 8 ? 0 : (7 - day) % 7 || 7;
-  nextSunday.setDate(ist.getDate() + daysUntilSunday);
-  nextSunday.setHours(8, 0, 0, 0);
-  return new Date(nextSunday.getTime() - istOffset);
+  const daysUntilSunday = day === 0 ? (ist.getHours() >= 8 ? 7 : 0) : 7 - day;
+  const target = new Date(ist);
+  target.setDate(ist.getDate() + daysUntilSunday);
+  target.setHours(8, 0, 0, 0);
+  // Convert IST target back to UTC by subtracting 5h30m
+  return new Date(target.getTime() - (5.5 * 60 * 60 * 1000));
 }
 
 function formatCountdown(ms) {
@@ -248,7 +249,7 @@ function formatCountdown(ms) {
 }
 
 function renderCountdown() {
-  const target = getNextSunday8am();
+  const target = getNextSunday8amUTC();
   const ms = target - new Date();
   const { hours, mins, secs } = formatCountdown(ms);
   return `<div class="locked-panel">
@@ -266,7 +267,7 @@ function renderCountdown() {
 function startCountdownTick() {
   const interval = setInterval(() => {
     if (isResultsUnlocked()) { clearInterval(interval); location.reload(); return; }
-    const target = getNextSunday8am();
+    const target = getNextSunday8amUTC();
     const ms = target - new Date();
     const { hours, mins, secs } = formatCountdown(ms);
     const h = document.getElementById("cd-h");
@@ -351,7 +352,6 @@ function renderWeekly(d, teamsData, allTime){
 
   if (!unlocked) startCountdownTick();
 
-  // Vote tracker — only show this week's players
   const votedSet = new Set(d.voters||[]);
   const thisWeekNames = new Set([...(d.voters||[]), ...(d.pendingVoters||[])]);
   const thisWeekPlayers = PLAYERS.filter(p => thisWeekNames.has(p.name));
@@ -369,7 +369,6 @@ function renderAnalytics(weekly, teamsData, allTime, unlocked){
   const weeklyTop = weekly.players && weekly.players[0];
   const sorted = [...players].sort((a,b) => Math.abs(b.delta) - Math.abs(a.delta));
 
-  // Form tab
   let formHtml = "";
   if (!unlocked) {
     formHtml = `<div style="text-align:center;padding:20px;font-family:var(--mono);font-size:11px;color:var(--muted)">🔒 Form guide unlocks Sunday 8am IST</div>`;
@@ -417,7 +416,6 @@ function renderAnalytics(weekly, teamsData, allTime, unlocked){
   }
   document.getElementById("apanel-form").innerHTML = formHtml;
 
-  // Teams tab
   if (teamsData && teamsData.teams && weekly.players && weekly.players.length) {
     const teamA = Array.isArray(teamsData.teams.teamA) ? teamsData.teams.teamA : teamsData.teams.teamA.split(",").map(n=>n.trim());
     const teamB = Array.isArray(teamsData.teams.teamB) ? teamsData.teams.teamB : teamsData.teams.teamB.split(",").map(n=>n.trim());
@@ -447,7 +445,6 @@ function renderAnalytics(weekly, teamsData, allTime, unlocked){
     document.getElementById("apanel-teams").innerHTML = `<div style="color:var(--muted);font-size:11px;font-family:var(--mono);padding:8px 0">Paste teams in Telegram first</div>`;
   }
 
-  // Voters tab — always visible
   const totalGames = allTime && allTime.recentGames ? Math.max(allTime.recentGames.length, 1) : 1;
   const voteMap = {};
   if (ALL_DATA.audit && ALL_DATA.audit.auditLog) {
