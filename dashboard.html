@@ -150,7 +150,6 @@ main{padding:20px 24px;max-width:1400px;margin:0 auto;}
   <div class="clock" id="clockEl"></div>
   <button class="nav-tab active" onclick="showView('weekly',this)">This Week</button>
   <button class="nav-tab" onclick="showView('alltime',this)">All Time</button>
-  <button class="nav-tab" onclick="showView('audit',this)">Audit</button>
 </nav>
 <main>
   <div class="view active" id="view-weekly">
@@ -193,19 +192,6 @@ main{padding:20px 24px;max-width:1400px;margin:0 auto;}
       </div>
     </div>
   </div>
-
-  <div class="view" id="view-audit">
-    <div class="g2">
-      <div class="panel">
-        <div class="phdr"><div class="ptitle">⚠️ Flagged Votes</div><div class="pbadge g" id="flagCount">0 flags</div></div>
-        <div id="flagsList"><div style="padding:20px 15px;font-family:var(--mono);font-size:11px;color:var(--muted)">No flags detected.</div></div>
-      </div>
-      <div class="panel">
-        <div class="phdr"><div class="ptitle">🗒️ Audit Log</div></div>
-        <div id="auditLog"><div style="padding:20px 15px;font-family:var(--mono);font-size:11px;color:var(--muted)">No audit entries yet.</div></div>
-      </div>
-    </div>
-  </div>
 </main>
 
 <script>
@@ -221,14 +207,8 @@ function clock(){
 }
 setInterval(clock,1000); clock();
 
-function getISTDate() {
-  // Always compute IST from UTC — works regardless of device timezone
-  return new Date(new Date().getTime() + IST_OFFSET_MS + (new Date().getTimezoneOffset() * 60000 * -1) - (new Date().getTimezoneOffset() * 60000 * -1));
-}
-
 function nowIST() {
   const now = new Date();
-  // Convert to UTC first, then add IST offset
   const utcMs = now.getTime() + (now.getTimezoneOffset() * 60000);
   return new Date(utcMs + IST_OFFSET_MS);
 }
@@ -242,12 +222,10 @@ function getNextSunday8amUTC() {
   const ist = nowIST();
   const day = ist.getDay();
   const daysUntilSunday = day === 0 ? (ist.getHours() >= 8 ? 7 : 0) : 7 - day;
-  // Build target date in IST
   const y = ist.getFullYear();
   const m = ist.getMonth();
   const d = ist.getDate() + daysUntilSunday;
-  // Sunday 8:00:00 IST as UTC
-  return new Date(Date.UTC(y, m, d, 2, 30, 0)); // 8am IST = 2:30am UTC
+  return new Date(Date.UTC(y, m, d, 2, 30, 0));
 }
 
 function formatCountdown(ms) {
@@ -305,22 +283,19 @@ function showAnalytics(id, tab){
 
 async function loadData(){
   try {
-    const [playersRes, weeklyRes, allTimeRes, auditRes, teamsRes] = await Promise.all([
+    const [playersRes, weeklyRes, allTimeRes, teamsRes] = await Promise.all([
       fetch(SCRIPT_URL + "?action=players"),
       fetch(SCRIPT_URL),
       fetch(SCRIPT_URL + "?action=alltime"),
-      fetch(SCRIPT_URL + "?action=audit"),
       fetch(SCRIPT_URL + "?action=teams")
     ]);
     PLAYERS = (await playersRes.json()).players || [];
     const weekly = await weeklyRes.json();
     const allTime = await allTimeRes.json();
-    const audit = await auditRes.json();
     const teams = await teamsRes.json();
-    ALL_DATA = { weekly, allTime, audit, teams };
+    ALL_DATA = { weekly, allTime, teams };
     renderWeekly(weekly, teams, allTime);
     renderAllTime(allTime);
-    renderAudit(audit);
     buildTicker(allTime && allTime.players);
   } catch(e) {
     console.error("Dashboard load failed:", e);
@@ -457,11 +432,9 @@ function renderAnalytics(weekly, teamsData, allTime, unlocked){
 
   const totalGames = allTime && allTime.recentGames ? Math.max(allTime.recentGames.length, 1) : 1;
   const voteMap = {};
-  if (ALL_DATA.audit && ALL_DATA.audit.auditLog) {
-    ALL_DATA.audit.auditLog.filter(e => e.event === "VoteReceived").forEach(e => {
-      const voter = e.detail.split(" rated")[0];
-      if (!voteMap[voter]) voteMap[voter] = 0;
-      voteMap[voter]++;
+  if (ALL_DATA.allTime && ALL_DATA.allTime.players) {
+    ALL_DATA.allTime.players.forEach(p => {
+      voteMap[p.name] = p.gamesPlayed || 0;
     });
   }
   const thisWeekNames = new Set([...(weekly.voters||[]), ...(weekly.pendingVoters||[])]);
@@ -515,18 +488,6 @@ function renderAllTime(d){
       const label = g.result==="Win"?"WIN":g.result==="Loss"?"LOSS":g.result==="Draw"?"DRAW":"—";
       return `<div class="game-row"><span class="game-wk">${g.weekKey}</span><span class="game-result ${cls}">${label}</span><span class="game-voters">${g.voters} voters</span></div>`;
     }).join("");
-  }
-}
-
-function renderAudit(d){
-  if (!d) return;
-  if (d.flaggedVotes && d.flaggedVotes.length) {
-    document.getElementById("flagCount").textContent = d.flaggedVotes.length + " flags";
-    document.getElementById("flagCount").className = "pbadge r";
-    document.getElementById("flagsList").innerHTML = `<div style="padding:12px 16px">${d.flaggedVotes.map(f=>`<div style="font-family:var(--mono);font-size:11px;padding:6px 0;border-bottom:1px solid var(--border);color:var(--red)">${f.voter} — avg ${f.avg} (${f.weekKey})</div>`).join("")}</div>`;
-  }
-  if (d.auditLog && d.auditLog.length) {
-    document.getElementById("auditLog").innerHTML = `<div style="padding:12px 16px">${d.auditLog.slice(-20).reverse().map(e=>`<div style="font-family:var(--mono);font-size:10px;padding:5px 0;border-bottom:1px solid var(--border);color:var(--muted2)"><span style="color:var(--accent)">${e.event}</span> · ${e.detail} · <span style="color:var(--muted)">${e.weekKey}</span></div>`).join("")}</div>`;
   }
 }
 
