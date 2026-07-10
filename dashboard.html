@@ -114,7 +114,7 @@ nav{display:flex;align-items:center;padding:0 20px;height:56px;border-bottom:1px
 
 /* LEADERBOARD CARD */
 .panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;overflow:hidden;}
-.panel-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:between;gap:8px;}
+.panel-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;}
 .panel-title{font-family:var(--mono);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--text);display:flex;align-items:center;gap:8px;}
 
 /* PODIUM */
@@ -151,7 +151,7 @@ nav{display:flex;align-items:center;padding:0 20px;height:56px;border-bottom:1px
 .row-pill{font-family:var(--mono);font-size:10px;font-weight:600;padding:1px 5px;border-radius:4px;background:rgba(255,255,255,0.03);color:var(--muted2);border:1px solid var(--border);}
 .row-pill.form-w{background:var(--accent-dim);color:var(--accent);border-color:rgba(0,255,136,0.15);}
 .row-pill.form-d{background:rgba(255,209,102,0.08);color:var(--yellow);border-color:rgba(255,209,102,0.15);}
-.row-pill.form-l{background:var(--red-dim);color:var(--red);border-color:rgba(ff,3d,5a,0.15);}
+.row-pill.form-l{background:var(--red-dim);color:var(--red);border-color:rgba(255,61,90,0.15);}
 .row-meta{font-size:11px;color:var(--muted2);}
 .row-meta span{color:var(--muted);font-family:var(--mono);}
 .row-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px;}
@@ -193,7 +193,6 @@ nav{display:flex;align-items:center;padding:0 20px;height:56px;border-bottom:1px
 </head>
 <body>
 
-<!-- PIN SCREEN -->
 <div class="pin-screen" id="pinScreen">
   <div class="pin-badge">BA</div>
   <div class="pin-title">Black Aces Rating Engine</div>
@@ -208,7 +207,6 @@ nav{display:flex;align-items:center;padding:0 20px;height:56px;border-bottom:1px
   <button class="pin-btn" onclick="verifyPin()">Unlock Dashboard</button>
 </div>
 
-<!-- MAIN DASHBOARD CONTENT (HIDDEN UNTIL UNLOCKED) -->
 <div id="dashboardContent" style="display:none;">
   <nav>
     <div class="nav-logo">
@@ -226,14 +224,12 @@ nav{display:flex;align-items:center;padding:0 20px;height:56px;border-bottom:1px
       <button class="nav-tab" id="tabThisWeek" onclick="switchTimeframe('thisWeek')">This Week</button>
       <button class="nav-tab active" id="tabAllTime" onclick="switchTimeframe('allTime')">All Time</button>
     </div>
-    <!-- UPDATED PLAYERS BUTTON -->
     <button class="nav-players-btn" id="playersBtn" onclick="toggleView()">Players</button>
     <button class="logout-btn" onclick="logout()">Lock</button>
   </nav>
 
   <div class="dashboard-container">
     
-    <!-- METRICS -->
     <div class="metrics-grid">
       <div class="metric-card mvp">
         <div class="metric-label">
@@ -262,7 +258,6 @@ nav{display:flex;align-items:center;padding:0 20px;height:56px;border-bottom:1px
         <div class="metric-sub" id="metricWinRateSub">0W of 1</div>
       </div>
       
-      <!-- UPDATED METRIC CARD -->
       <div class="metric-card coming-soon">
         <div class="metric-label">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
@@ -273,9 +268,7 @@ nav{display:flex;align-items:center;padding:0 20px;height:56px;border-bottom:1px
       </div>
     </div>
 
-    <!-- MAIN VIEWS PANEL -->
     <div class="left-col" id="mainLeftCol">
-      <!-- LEADERBOARD PANEL -->
       <div class="panel" id="leaderboardPanel">
         <div class="panel-header">
           <div class="panel-title">
@@ -283,9 +276,7 @@ nav{display:flex;align-items:center;padding:0 20px;height:56px;border-bottom:1px
           </div>
         </div>
         
-        <!-- PODIUM PLACEHOLDERS -->
         <div class="podium-container" id="podiumContainer">
-          <!-- P2 -->
           <div class="podium-spot p2">
             <div class="podium-avatar" id="p2Avatar">P</div>
             <div class="podium-name" id="p2Name">Prabal</div>
@@ -293,7 +284,6 @@ nav{display:flex;align-items:center;padding:0 20px;height:56px;border-bottom:1px
             <div class="podium-stars" id="p2Stars">★★★★☆</div>
             <div class="podium-base"><div class="podium-medal">🥈</div></div>
           </div>
-          <!-- P1 -->
           <div class="podium-spot p1">
             <div class="podium-avatar" id="p1Avatar">K</div>
             <div class="podium-name" id="p1Name">Kavan</div>
@@ -301,7 +291,6 @@ nav{display:flex;align-items:center;padding:0 20px;height:56px;border-bottom:1px
             <div class="podium-stars" id="p1Stars">★★★★½</div>
             <div class="podium-base"><div class="podium-medal">🥇</div></div>
           </div>
-          <!-- P3 -->
           <div class="podium-spot p3">
             <div class="podium-avatar" id="p3Avatar">S</div>
             <div class="podium-name" id="p3Name">Shardul</div>
@@ -311,25 +300,20 @@ nav{display:flex;align-items:center;padding:0 20px;height:56px;border-bottom:1px
           </div>
         </div>
 
-        <!-- LIST LEADERBOARD ROWS -->
         <div class="rows-container" id="leaderboardRows">
-          <!-- Populated by JS -->
-        </div>
+          </div>
       </div>
     </div>
 
-    <!-- RIGHT COLUMN: MATCH HISTORY & MANAGEMENT -->
     <div class="right-col" id="mainRightCol">
       <div class="panel">
         <div class="panel-header">
           <div class="panel-title">📆 MATCH HISTORY</div>
         </div>
         <div id="matchHistoryContainer">
-          <!-- Populated by JS -->
-        </div>
+          </div>
       </div>
 
-      <!-- ADMIN ADD MATCH PANEL -->
       <div class="manage-panel" id="adminMatchPanel">
         <div class="manage-title">➕ RECORD NEW MATCH</div>
         <div class="form-group">
@@ -356,8 +340,7 @@ nav{display:flex;align-items:center;padding:0 20px;height:56px;border-bottom:1px
         <div style="margin-top:8px;">
           <label class="form-label" style="display:block;margin-bottom:8px;">PLAYER RATINGS FOR THIS MATCH</label>
           <div id="adminPlayerRatingsList">
-            <!-- JavaScript dynamically inserts input rows for active group context -->
-          </div>
+            </div>
         </div>
 
         <button class="btn-submit" onclick="submitNewMatch()">Commit Match Data</button>
@@ -368,7 +351,203 @@ nav{display:flex;align-items:center;padding:0 20px;height:56px;border-bottom:1px
 </div>
 
 <script>
-// Mock data and state machine implementation details continue below as needed...
+// Mock Local State data for demo fallback (real installations look up data over API endpoints)
+const mockAllTimeData = {
+  players: [
+    { name: "Kavan", pos: "MID", avg: 4.53, played: 12, winRate: 75, form: ["W","W","W"] },
+    { name: "Prabal", pos: "FWD", avg: 4.30, played: 14, winRate: 64, form: ["W","L","W"] },
+    { name: "Shardul", pos: "DEF", avg: 4.12, played: 10, winRate: 50, form: ["D","W","L"] },
+    { name: "Rohan", pos: "GK", avg: 3.95, played: 15, winRate: 40, form: ["L","L","W"] },
+    { name: "Samit", pos: "MID", avg: 3.80, played: 8,  winRate: 38, form: ["W","D","L"] }
+  ],
+  recentGames: [
+    { weekKey: "2026_w26", result: "WIN", scoreA: "5", scoreB: "3", teamAName: "Black Aces", teamBName: "Titans", voters: 14 },
+    { weekKey: "2026_w25", result: "DRAW", scoreA: "4", scoreB: "4", teamAName: "Black Aces", teamBName: "Strikers", voters: 16 }
+  ]
+};
+
+const mockThisWeekData = {
+  players: [
+    { name: "Prabal", pos: "FWD", avg: 4.70, played: 1, winRate: 100, form: ["W"] },
+    { name: "Kavan", pos: "MID", avg: 4.40, played: 1, winRate: 100, form: ["W"] },
+    { name: "Shardul", pos: "DEF", avg: 3.90, played: 1, winRate: 100, form: ["W"] }
+  ],
+  recentGames: [
+    { weekKey: "2026_w26", result: "WIN", scoreA: "5", scoreB: "3", teamAName: "Black Aces", teamBName: "Titans", voters: 14 }
+  ]
+};
+
+let currentView = "dashboard"; // dashboard vs players roster view
+let currentTimeframe = "allTime"; // allTime vs thisWeek
+
+// Live Engine Clock Loop
+function startClock() {
+  setInterval(() => {
+    const timeString = new Date().toLocaleTimeString('en-US', { hour12: false, timeZone: 'Asia/Kolkata' });
+    document.getElementById("liveClock").innerText = timeString + " IST";
+  }, 1000);
+}
+startClock();
+
+// Numeric Input UI Cursor Advancer
+function movePin(input, index) {
+  if (input.value.length === 1 && index < 3) {
+    document.querySelectorAll(".pin-input")[index + 1].focus();
+  }
+}
+
+// PIN VALIDATION SECURE HANDLER
+function verifyPin() {
+  const inputs = document.querySelectorAll(".pin-input");
+  let enteredPin = "";
+  inputs.forEach(input => enteredPin += input.value);
+
+  // CORRECT ACCESS PIN SPECIFICATION VERIFIER
+  if (enteredPin === "9630") {
+    document.getElementById("pinScreen").style.display = "none";
+    document.getElementById("dashboardContent").style.display = "block";
+    renderData();
+  } else {
+    document.getElementById("pinError").innerText = "Invalid access verification credentials.";
+    inputs.forEach(input => input.value = "");
+    inputs[0].focus();
+  }
+}
+
+// Global View Switch Toggler
+function toggleView() {
+  const pBtn = document.getElementById("playersBtn");
+  if (currentView === "dashboard") {
+    currentView = "players";
+    pBtn.innerText = "Dashboard";
+    document.getElementById("podiumContainer").classList.add("hidden");
+    document.getElementById("leaderboardTitle").innerText = "REGISTERED SQUAD LIST";
+    renderSquadView();
+  } else {
+    currentView = "dashboard";
+    pBtn.innerText = "Players";
+    document.getElementById("podiumContainer").classList.remove("hidden");
+    document.getElementById("leaderboardTitle").innerText = currentTimeframe === "allTime" ? "ALL-TIME LEADERBOARD" : "THIS WEEK LEADERBOARD";
+    renderData();
+  }
+}
+
+// Switch between Timeframe Tabs
+function switchTimeframe(timeframe) {
+  currentTimeframe = timeframe;
+  document.getElementById("tabThisWeek").classList.toggle("active", timeframe === "thisWeek");
+  document.getElementById("tabAllTime").classList.toggle("active", timeframe === "allTime");
+  
+  if (currentView === "dashboard") {
+    document.getElementById("leaderboardTitle").innerText = timeframe === "allTime" ? "ALL-TIME LEADERBOARD" : "THIS WEEK LEADERBOARD";
+    renderData();
+  }
+}
+
+// Render Dashboard Data (Leaderboard, Podium, and Match History Lists)
+function renderData() {
+  const activeDataset = currentTimeframe === "allTime" ? mockAllTimeData : mockThisWeekData;
+  
+  // Set Top Highlight Metrics
+  if(activeDataset.players.length > 0) {
+    const topPlayer = activeDataset.players[0];
+    document.getElementById("metricMvpName").innerText = topPlayer.name;
+    document.getElementById("metricMvpSub").innerText = `${topPlayer.avg} avg · ${topPlayer.pos}`;
+    document.getElementById("mvpLabel").innerText = currentTimeframe === "allTime" ? "ALL-TIME MVP" : "WEEKLY MVP";
+  }
+  
+  document.getElementById("metricGamesCount").innerText = activeDataset.recentGames.length;
+  document.getElementById("metricWinRate").innerText = activeDataset.players.length > 0 ? activeDataset.players[0].winRate + "%" : "0%";
+
+  // Set Top 3 Podium Highlights
+  const p1 = activeDataset.players[0] || { name: "—", avg: "0.0", pos: "" };
+  const p2 = activeDataset.players[1] || { name: "—", avg: "0.0", pos: "" };
+  const p3 = activeDataset.players[2] || { name: "—", avg: "0.0", pos: "" };
+
+  document.getElementById("p1Name").innerText = p1.name;   document.getElementById("p1Score").innerText = p1.avg;  document.getElementById("p1Avatar").innerText = p1.name[0];
+  document.getElementById("p2Name").innerText = p2.name;   document.getElementById("p2Score").innerText = p2.avg;  document.getElementById("p2Avatar").innerText = p2.name[0];
+  document.getElementById("p3Name").innerText = p3.name;   document.getElementById("p3Score").innerText = p3.avg;  document.getElementById("p3Avatar").innerText = p3.name[0];
+
+  // Populate Row Containers 
+  const container = document.getElementById("leaderboardRows");
+  container.innerHTML = "";
+  
+  activeDataset.players.slice(3).forEach((player, idx) => {
+    const row = document.createElement("div");
+    row.className = "player-row";
+    row.innerHTML = `
+      <div class="row-rank">#${idx + 4}</div>
+      <div class="row-avatar">${player.name[0]}</div>
+      <div class="row-info">
+        <div class="row-name-wrap">
+          <span class="row-name">${player.name}</span>
+          <span class="row-pos ${player.pos.toLowerCase()}">${player.pos}</span>
+        </div>
+        <div class="row-meta">Played <span>${player.played} matches</span></div>
+      </div>
+      <div class="row-right">
+        <div class="row-score">${player.avg}</div>
+        <div class="row-stat-pills">
+          ${player.form.map(f => `<span class="row-pill form-${f.toLowerCase()}">${f}</span>`).join("")}
+        </div>
+      </div>
+    `;
+    container.appendChild(row);
+  });
+
+  // Populate Matches Container
+  const matchContainer = document.getElementById("matchHistoryContainer");
+  matchContainer.innerHTML = "";
+  activeDataset.recentGames.forEach(m => {
+    const card = document.createElement("div");
+    card.className = "match-card";
+    card.innerHTML = `
+      <div class="match-top">
+        <span class="match-id">${m.weekKey.toUpperCase()}</span>
+        <span class="match-voters">${m.voters} Voters</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:14px; font-weight:600;">${m.teamAName} vs ${m.teamBName}</span>
+        <span class="match-res ${m.result.toLowerCase()}">${m.result} ${m.scoreA}-${m.scoreB}</span>
+      </div>
+    `;
+    matchContainer.appendChild(card);
+  });
+}
+
+// Display Complete Squad Roster inside Left Panel layout
+function renderSquadView() {
+  const container = document.getElementById("leaderboardRows");
+  container.innerHTML = "";
+  
+  mockAllTimeData.players.forEach((player, idx) => {
+    const row = document.createElement("div");
+    row.className = "player-row";
+    row.innerHTML = `
+      <div class="row-rank">${idx + 1}</div>
+      <div class="row-avatar">${player.name[0]}</div>
+      <div class="row-info">
+        <div class="row-name-wrap">
+          <span class="row-name">${player.name}</span>
+          <span class="row-pos ${player.pos.toLowerCase()}">${player.pos}</span>
+        </div>
+        <div class="row-meta">Status: <span style="color:var(--accent)">Active Squad Component</span></div>
+      </div>
+    `;
+    container.appendChild(row);
+  });
+}
+
+// App Locking Exit Controller
+function logout() {
+  document.getElementById("dashboardContent").style.display = "none";
+  document.getElementById("pinScreen").style.display = "flex";
+  document.querySelectorAll(".pin-input").forEach(i => i.value = "");
+}
+
+function submitNewMatch() {
+  alert("Match data sent to transaction interface logic stack.");
+}
 </script>
 
 </body>
