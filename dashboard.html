@@ -119,6 +119,10 @@ main{padding:16px 20px;max-width:1400px;margin:0 auto;}
 .vc{font-family:var(--mono);font-size:10px;font-weight:600;padding:3px 9px;border-radius:5px;letter-spacing:.04em;}
 .vc.voted{background:var(--accent-dim);color:var(--accent);border:1px solid rgba(0,255,136,.25);}
 .vc.pending{background:var(--surface2);color:var(--muted2);border:1px solid var(--border);}
+.upcoming-msg{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:26px 20px;text-align:center;}
+.upcoming-icon{font-size:30px;}
+.upcoming-title{font-family:var(--mono);font-weight:700;font-size:13px;letter-spacing:.06em;color:var(--gold);}
+.upcoming-sub{font-family:var(--mono);font-size:10px;color:var(--muted2);}
 .view{display:none;}
 .view.active{display:block;}
 .analytics-tabs{display:flex;border-bottom:1px solid var(--border);}
@@ -175,10 +179,18 @@ main{padding:16px 20px;max-width:1400px;margin:0 auto;}
 .cd-val{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--accent);}
 .cd-label{font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:3px;letter-spacing:.1em;text-transform:uppercase;}
 .locked-sub{font-size:11px;color:var(--muted);font-family:var(--mono);}
-.player-select-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px 14px;}
-@media(max-width:500px){.player-select-grid{grid-template-columns:repeat(2,1fr);}}
-.player-btn{padding:8px 10px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;text-align:center;}
-.player-btn:hover,.player-btn.active{border-color:var(--accent);background:var(--accent-dim);color:var(--accent);}
+.player-select-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:14px;}
+@media(max-width:700px){.player-select-grid{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:480px){.player-select-grid{grid-template-columns:repeat(2,1fr);}}
+.player-btn{position:relative;display:flex;flex-direction:column;align-items:center;gap:7px;padding:14px 8px;border-radius:12px;background:var(--surface2);border:1px solid var(--border);color:var(--text);cursor:pointer;transition:transform .18s cubic-bezier(.34,1.56,.64,1),border-color .18s,box-shadow .18s;overflow:hidden;}
+.player-btn::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,rgba(0,255,136,.10),transparent 70%);opacity:0;transition:opacity .18s;}
+.player-btn:hover{transform:translateY(-3px);border-color:var(--accent);box-shadow:0 6px 18px -8px rgba(0,255,136,.4);}
+.player-btn:hover::before{opacity:1;}
+.player-btn.active{border-color:var(--accent);background:var(--accent-dim);box-shadow:0 0 0 1px var(--accent) inset;}
+.player-btn .pb-avatar{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;font-size:16px;color:#fff;border:2px solid rgba(255,255,255,.12);position:relative;z-index:1;transition:transform .18s;}
+.player-btn:hover .pb-avatar{transform:scale(1.08);}
+.player-btn .pb-name{font-family:var(--mono);font-size:11px;font-weight:600;position:relative;z-index:1;}
+.player-btn .pb-pos{font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:.08em;padding:1px 6px;border-radius:4px;background:var(--surface3);position:relative;z-index:1;}
 .pc-content{padding:14px;}
 .pc-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
 .pc-avatar{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;font-size:20px;border:2px solid var(--accent);}
@@ -227,7 +239,6 @@ main{padding:16px 20px;max-width:1400px;margin:0 auto;}
     <div class="logo-badge">BA</div>
     <div>
       <div class="nav-title">Black Aces FC</div>
-      <div class="nav-sub">Player Ratings Exchange</div>
     </div>
   </div>
   <div class="live-dot"></div>
@@ -275,7 +286,7 @@ main{padding:16px 20px;max-width:1400px;margin:0 auto;}
     </div>
     <div class="g2">
       <div class="panel">
-        <div class="phdr"><div class="ptitle">🏆 All-Time Leaderboard</div></div>
+        <div class="phdr"><div class="ptitle">🏆 All-Time MVP Leaderboard</div></div>
         <div id="atPodium"></div>
         <div id="atLb"></div>
       </div>
@@ -463,11 +474,16 @@ function renderWeekly(d, teamsData, allTime){
   if (!d) return;
   document.getElementById("wkLabel").textContent = d.weekKey || "—";
   const unlocked = isResultsUnlocked();
+  const matchDone = d.matchResult && d.matchResult !== "Unknown";
   const top = d.players && d.players[0];
   const avgRating = d.players && d.players.length ? (d.players.reduce((s,p)=>s+p.avg,0)/d.players.length) : null;
 
+  const votesCastCard = matchDone
+    ? `<div class="sc"><div class="sc-label">Votes Cast</div><div class="sc-val">${d.totalVoters}/${d.expectedVoters}</div><div class="sc-sub">${d.expectedVoters?Math.round(d.totalVoters/d.expectedVoters*100):0}% done</div></div>`
+    : `<div class="sc"><div class="sc-label">Votes Cast</div><div class="sc-val" style="font-size:15px">Not open</div><div class="sc-sub">match yet to be played</div></div>`;
+
   document.getElementById("wStats").innerHTML = `
-    <div class="sc"><div class="sc-label">Votes Cast</div><div class="sc-val">${d.totalVoters}/${d.expectedVoters}</div><div class="sc-sub">${d.expectedVoters?Math.round(d.totalVoters/d.expectedVoters*100):0}% done</div></div>
+    ${votesCastCard}
     <div class="sc"><div class="sc-label">Avg Rating</div><div class="sc-val">${unlocked?(avgRating?avgRating.toFixed(1):"—"):"🔒"}</div><div class="sc-sub">${unlocked?"squad average":"unlocks Sunday 8am"}</div></div>
     <div class="sc"><div class="sc-label">MVP This Week</div><div class="sc-val" style="font-size:${unlocked?"15px":"26px"}">${unlocked?(top?top.name:"—"):"🔒"}</div><div class="sc-sub">${unlocked?(top?starsHtml(top.avg):"no data"):"unlocks Sunday 8am"}</div></div>
     <div class="sc gold"><div class="sc-label">Top Rating</div><div class="sc-val">${unlocked?(top?top.avg.toFixed(1):"—"):"🔒"}</div><div class="sc-sub">${unlocked?(top?top.name+" leads":"no votes yet"):"unlocks Sunday 8am"}</div></div>`;
@@ -516,9 +532,19 @@ function renderWeekly(d, teamsData, allTime){
   const votedSet = new Set(d.voters||[]);
   const thisWeekNames = new Set([...(d.voters||[]), ...(d.pendingVoters||[])]);
   const thisWeekPlayers = PLAYERS.filter(p => thisWeekNames.has(p.name));
-  document.getElementById("vChips").innerHTML = `<div class="vote-chips">${thisWeekPlayers.map(p=>`<span class="vc ${votedSet.has(p.name)?"voted":"pending"}">${votedSet.has(p.name)?"✓ ":""}${p.name}</span>`).join("")}</div>`;
-  document.getElementById("vtBadge").textContent = `${d.totalVoters}/${d.expectedVoters}`;
-  document.getElementById("vtBadge").className = `pbadge ${d.totalVoters===d.expectedVoters?"g":"r"}`;
+  if (matchDone) {
+    document.getElementById("vChips").innerHTML = `<div class="vote-chips">${thisWeekPlayers.map(p=>`<span class="vc ${votedSet.has(p.name)?"voted":"pending"}">${votedSet.has(p.name)?"✓ ":""}${p.name}</span>`).join("")}</div>`;
+    document.getElementById("vtBadge").textContent = `${d.totalVoters}/${d.expectedVoters}`;
+    document.getElementById("vtBadge").className = `pbadge ${d.totalVoters===d.expectedVoters?"g":"r"}`;
+  } else {
+    document.getElementById("vChips").innerHTML = `<div class="upcoming-msg">
+      <div class="upcoming-icon">⚽</div>
+      <div class="upcoming-title">Match yet to be played</div>
+      <div class="upcoming-sub">Voting opens once the result is in</div>
+    </div>`;
+    document.getElementById("vtBadge").textContent = "UPCOMING";
+    document.getElementById("vtBadge").className = "pbadge gold";
+  }
   renderAnalytics(d, teamsData, allTime, unlocked);
 }
 
@@ -632,7 +658,7 @@ function renderAllTime(d){
     <div class="at-card"><div class="at-card-label">All-Time MVP</div><div class="at-card-val">${top.name}</div><div class="at-card-sub">${top.avg} avg · ${starsHtml(top.avg)}</div></div>
     <div class="at-card"><div class="at-card-label">Games Tracked</div><div class="at-card-val">${totalGames}</div><div class="at-card-sub">this season</div></div>
     <div class="at-card"><div class="at-card-label">Win Rate</div><div class="at-card-val">${totalGames?Math.round(wins/totalGames*100):0}%</div><div class="at-card-sub">${wins}W of ${totalGames}</div></div>
-    <div class="at-card gold"><div class="at-card-label">🏅 The Special One</div><div class="at-card-val" style="font-size:15px">${SPECIAL_UNLOCKED&&anchor?anchor.name:"Coming soon"}</div><div class="at-card-sub">${SPECIAL_UNLOCKED&&anchor?anchor.winRate+"% win rate · "+anchor.played+" games":"new award types"}</div></div>`;
+    <div class="at-card gold"><div class="at-card-label">🏅 The Special One</div><div class="at-card-val" style="font-size:15px">${SPECIAL_UNLOCKED&&anchor?anchor.name:"Coming soon"}</div><div class="at-card-sub">${SPECIAL_UNLOCKED&&anchor?anchor.winRate+"% win rate · "+anchor.played+" games":"&nbsp;"}</div></div>`;
 
   const top3 = d.players.slice(0,3);
   const rest = d.players.slice(3);
@@ -700,7 +726,6 @@ function renderStandings(s){
     content.innerHTML = `<div class="special-lock">
       <div class="special-lock-icon">🔒</div>
       <div class="special-lock-title">The Special One — coming soon</div>
-      <div class="special-lock-sub">new award types</div>
       <div class="special-lock-meta">${s.weeksOfData||0} of ${s.revealWeeks||5} weeks logged${remaining?` · ${remaining} to go`:""}</div>
     </div>`;
     return;
@@ -736,9 +761,15 @@ function renderStandings(s){
 
 function buildPlayerSelectGrid() {
   const grid = document.getElementById("playerSelectGrid");
-  grid.innerHTML = PLAYERS.map(p => `
-    <button class="player-btn" onclick="loadPlayerCorner('${p.name}', this)">${p.name}</button>
-  `).join("");
+  grid.innerHTML = PLAYERS.map(p => {
+    const bg = avatarColor(p.name);
+    const posCol = POS_COL[p.pos] || "#fff";
+    return `<button class="player-btn" onclick="loadPlayerCorner('${p.name}', this)">
+      <div class="pb-avatar" style="background:${bg}">${initials(p.name)}</div>
+      <div class="pb-name">${p.name}</div>
+      <div class="pb-pos" style="color:${posCol}">${p.pos||"—"}</div>
+    </button>`;
+  }).join("");
 }
 
 async function loadPlayerCorner(name, btn) {
