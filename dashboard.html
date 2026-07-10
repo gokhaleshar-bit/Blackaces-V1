@@ -43,8 +43,49 @@ nav{display:flex;align-items:center;padding:0 20px;height:56px;border-bottom:1px
 .nav-tabs{display:flex;gap:4px;background:rgba(255,255,255,0.02);padding:3px;border-radius:8px;border:1px solid var(--border);margin-left:16px;}
 .nav-tab{font-family:var(--mono);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:6px 12px;border-radius:6px;cursor:pointer;color:var(--muted2);border:none;background:none;transition:all .2s;}
 .nav-tab.active{background:var(--accent-dim);color:var(--accent);border:1px solid rgba(0,255,136,0.2);}
-.nav-players-btn{font-family:var(--mono);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:6px 12px;border-radius:6px;cursor:pointer;color:var(--muted2);border:1px solid transparent;background:none;margin-left:8px;transition:all .2s;}
-.nav-players-btn:hover{color:var(--text);background:var(--surface2);}
+
+/* NEW PLAYERS BUTTON STYLES */
+.nav-players-btn{
+  position:relative;
+  font-family:var(--mono);
+  font-size:12px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  padding:8px 16px;
+  border-radius:8px;
+  cursor:pointer;
+  color:var(--accent);
+  border:1px solid var(--accent);
+  background:rgba(0,255,136,0.05);
+  margin-left:16px;
+  transition:all .2s;
+  box-shadow:0 0 10px rgba(0,255,136,0.1);
+}
+.nav-players-btn:hover{
+  background:rgba(0,255,136,0.15);
+  box-shadow:0 0 15px rgba(0,255,136,0.3);
+  transform:translateY(-1px);
+}
+.nav-players-btn::after{
+  content:'NEW';
+  position:absolute;
+  top:-8px;
+  right:-12px;
+  background:var(--red);
+  color:#fff;
+  font-size:9px;
+  padding:2px 6px;
+  border-radius:10px;
+  font-weight:700;
+  box-shadow:0 0 8px rgba(255,61,90,0.5);
+  animation:pulse-new 2s infinite;
+}
+@keyframes pulse-new{
+  0%{transform:scale(1);box-shadow:0 0 0 0 rgba(255,61,90,0.4);}
+  70%{transform:scale(1.05);box-shadow:0 0 0 6px rgba(255,61,90,0);}
+  100%{transform:scale(1);box-shadow:0 0 0 0 rgba(255,61,90,0);}
+}
 
 /* MAIN LAYOUT */
 .dashboard-container{padding:20px;max-width:1600px;margin:0 auto;display:grid;grid-template-columns:1fr 450px;gap:20px;}
@@ -185,6 +226,7 @@ nav{display:flex;align-items:center;padding:0 20px;height:56px;border-bottom:1px
       <button class="nav-tab" id="tabThisWeek" onclick="switchTimeframe('thisWeek')">This Week</button>
       <button class="nav-tab active" id="tabAllTime" onclick="switchTimeframe('allTime')">All Time</button>
     </div>
+    <!-- UPDATED PLAYERS BUTTON -->
     <button class="nav-players-btn" id="playersBtn" onclick="toggleView()">Players</button>
     <button class="logout-btn" onclick="logout()">Lock</button>
   </nav>
