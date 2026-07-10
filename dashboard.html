@@ -11,133 +11,196 @@
   --border:#1a2740;--border2:#243550;
   --accent:#00ff88;--accent-dim:rgba(0,255,136,0.12);
   --red:#ff3d5a;--red-dim:rgba(255,61,90,0.12);
-  --blue:#3d8bff;--yellow:#ffd166;--yellow-dim:rgba(255,209,102,0.1);
+  --gold:#ffd166;--gold-dim:rgba(255,209,102,0.12);
+  --blue:#3d8bff;--yellow:#ffd166;
   --text:#e8f0fe;--muted:#4a6080;--muted2:#7a90b0;
   --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
-  --ticker-h:36px;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden;}
-.ticker-wrap{width:100%;height:var(--ticker-h);background:var(--surface);border-bottom:1px solid var(--border);overflow:hidden;display:flex;}
-.ticker-label{flex-shrink:0;padding:0 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.15em;color:var(--accent);border-right:1px solid var(--border);display:flex;align-items:center;}
-.ticker-track{flex:1;overflow:hidden;}
-.ticker-inner{display:flex;white-space:nowrap;animation:ticker-scroll 30s linear infinite;}
-.ticker-inner:hover{animation-play-state:paused;}
-@keyframes ticker-scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
-.ticker-item{display:inline-flex;align-items:center;gap:8px;padding:0 20px;border-right:1px solid var(--border);height:var(--ticker-h);font-family:var(--mono);font-size:11px;}
-.ticker-name{font-weight:700;letter-spacing:.05em;color:var(--text);}
-.fl{color:var(--accent);font-weight:600;}
-.fd{color:var(--red);font-weight:600;}
-nav{display:flex;align-items:center;padding:0 24px;height:60px;border-bottom:1px solid var(--border);background:var(--surface);gap:16px;}
-.nav-logo{display:flex;align-items:center;gap:12px;margin-right:auto;}
-.logo-badge{width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#1a3a6a,#0d5c3a);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;font-size:13px;color:var(--accent);}
-.nav-title{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.08em;text-transform:uppercase;}
-.nav-sub{font-size:10px;color:var(--muted);letter-spacing:.05em;margin-top:1px;}
-.live-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);animation:pulse 2s infinite;}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.clock{font-family:var(--mono);font-size:12px;color:var(--muted2);}
-.nav-tab{padding:6px 14px;border-radius:6px;font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;border:1px solid transparent;color:var(--muted2);background:none;transition:all .2s;}
+
+/* PIN SCREEN */
+.pin-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:24px;}
+.pin-badge{width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,#1a3a6a,#0d5c3a);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;font-size:24px;color:var(--accent);}
+.pin-title{font-family:var(--mono);font-weight:700;font-size:16px;letter-spacing:.1em;text-transform:uppercase;color:var(--text);}
+.pin-sub{font-size:12px;color:var(--muted);font-family:var(--mono);}
+.pin-input-wrap{display:flex;gap:10px;}
+.pin-input{width:52px;height:60px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);color:var(--accent);font-family:var(--mono);font-size:24px;font-weight:700;text-align:center;outline:none;transition:border-color .2s;}
+.pin-input:focus{border-color:var(--accent);}
+.pin-btn{padding:12px 32px;border-radius:10px;border:none;background:linear-gradient(135deg,#1a3a6a,#0d5c3a);color:var(--accent);font-family:var(--mono);font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:opacity .2s;}
+.pin-btn:hover{opacity:.85;}
+.pin-error{font-family:var(--mono);font-size:11px;color:var(--red);height:16px;}
+
+/* NAV */
+nav{display:flex;align-items:center;padding:0 20px;height:56px;border-bottom:1px solid var(--border);background:var(--surface);gap:12px;position:sticky;top:0;z-index:100;}
+.nav-logo{display:flex;align-items:center;gap:10px;margin-right:auto;}
+.logo-badge{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,#1a3a6a,#0d5c3a);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;font-size:12px;color:var(--accent);flex-shrink:0;}
+.nav-title{font-family:var(--mono);font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase;}
+.nav-sub{font-size:10px;color:var(--muted);margin-top:1px;}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent);animation:pulse 2s infinite;flex-shrink:0;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.clock{font-family:var(--mono);font-size:11px;color:var(--muted2);white-space:nowrap;}
+.nav-tabs{display:flex;gap:4px;}
+.nav-tab{padding:5px 12px;border-radius:6px;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;border:1px solid transparent;color:var(--muted2);background:none;transition:all .2s;white-space:nowrap;}
 .nav-tab.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent);}
-main{padding:20px 24px;max-width:1400px;margin:0 auto;}
-.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
-.sc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;animation:fadeUp .4s ease both;}
-@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.sc-label{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
-.sc-val{font-family:var(--mono);font-size:28px;font-weight:700;color:var(--accent);line-height:1;}
-.sc-sub{font-size:11px;color:var(--muted2);margin-top:6px;}
+
+main{padding:16px 20px;max-width:1400px;margin:0 auto;}
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+@media(max-width:700px){.stat-row{grid-template-columns:repeat(2,1fr);}}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;animation:fadeUp .4s ease both;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.sc-label{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.sc-val{font-family:var(--mono);font-size:26px;font-weight:700;color:var(--accent);line-height:1;}
+.sc-sub{font-size:11px;color:var(--muted2);margin-top:5px;}
+.sc.gold .sc-val{color:var(--gold);}
 .sc.red .sc-val{color:var(--red);}
-.sc.yellow .sc-val{color:var(--yellow);}
-.sc.muted .sc-val{color:var(--muted2);}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media(max-width:700px){.g2{grid-template-columns:1fr;}}
 .col-stack{display:flex;flex-direction:column;gap:12px;}
 .panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
-.phdr{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);}
+.phdr{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--border);}
 .ptitle{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted2);}
 .pbadge{font-family:var(--mono);font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;}
 .pbadge.g{background:var(--accent-dim);color:var(--accent);}
 .pbadge.r{background:var(--red-dim);color:var(--red);}
-.lb-row{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--border);transition:background .15s;}
+.pbadge.gold{background:var(--gold-dim);color:var(--gold);}
+.podium{display:flex;align-items:flex-end;justify-content:center;gap:8px;padding:20px 16px 0;}
+.pod{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;}
+.pod-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;font-size:16px;border:2px solid var(--border);}
+.pod-1 .pod-avatar{width:52px;height:52px;font-size:18px;border-color:var(--gold);}
+.pod-2 .pod-avatar{border-color:#b4b4c8;}
+.pod-3 .pod-avatar{border-color:#c89060;}
+.pod-name{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.05em;text-align:center;}
+.pod-score{font-family:var(--mono);font-size:13px;font-weight:700;}
+.pod-1 .pod-score{color:var(--gold);}
+.pod-2 .pod-score{color:#b4b4c8;}
+.pod-3 .pod-score{color:#c89060;}
+.pod-block{border-radius:6px 6px 0 0;width:100%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:18px;}
+.pod-1 .pod-block{height:60px;background:rgba(255,209,102,.1);border:1px solid rgba(255,209,102,.3);}
+.pod-2 .pod-block{height:44px;background:rgba(180,180,200,.07);border:1px solid rgba(180,180,200,.2);}
+.pod-3 .pod-block{height:32px;background:rgba(200,144,96,.07);border:1px solid rgba(200,144,96,.2);}
+.pod-stars{font-size:9px;color:var(--muted2);margin-top:2px;}
+.lb-row{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);transition:background .15s;}
 .lb-row:last-child{border-bottom:none;}
 .lb-row:hover{background:var(--surface2);}
-.lb-rank{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:700;flex-shrink:0;background:var(--surface2);color:var(--muted2);}
-.lb-rank.g{background:rgba(255,209,102,.15);color:var(--yellow);}
-.lb-rank.s{background:rgba(180,180,200,.1);color:#b4b4c8;}
-.lb-rank.b{background:rgba(180,120,60,.1);color:#c89060;}
+.lb-avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;font-size:11px;flex-shrink:0;}
 .lb-info{flex:1;min-width:0;}
-.lb-name{font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.03em;display:flex;align-items:center;gap:6px;}
+.lb-name{font-family:var(--mono);font-size:11px;font-weight:600;display:flex;align-items:center;gap:6px;}
 .lb-meta{font-size:10px;color:var(--muted);margin-top:2px;}
 .lb-right{text-align:right;flex-shrink:0;}
-.lb-score{font-family:var(--mono);font-size:16px;font-weight:700;}
-.lb-score.up{color:var(--accent);}
-.lb-bar-w{width:60px;height:3px;background:var(--border);border-radius:2px;margin-top:4px;margin-left:auto;}
+.lb-score{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--accent);}
+.lb-stars{font-size:10px;color:var(--gold);margin-top:1px;}
+.lb-bar-w{width:50px;height:3px;background:var(--border);border-radius:2px;margin-top:3px;margin-left:auto;}
 .lb-bar{height:100%;border-radius:2px;background:var(--accent);}
-.pos-pill{font-size:9px;font-weight:700;letter-spacing:.08em;padding:1px 5px;border-radius:3px;background:var(--surface2);}
-.vote-chips{display:flex;flex-wrap:wrap;gap:6px;padding:12px 16px;}
-.vc{font-family:var(--mono);font-size:10px;font-weight:600;padding:4px 10px;border-radius:5px;letter-spacing:.05em;}
-.vc.voted{background:var(--accent-dim);color:var(--accent);border:1px solid rgba(0,255,136,.3);}
+.pos-pill{font-size:9px;font-weight:700;letter-spacing:.06em;padding:1px 5px;border-radius:3px;background:var(--surface2);}
+.wl-badge{font-family:var(--mono);font-size:9px;padding:1px 5px;border-radius:3px;background:var(--accent-dim);color:var(--accent);}
+.vote-chips{display:flex;flex-wrap:wrap;gap:5px;padding:10px 14px;}
+.vc{font-family:var(--mono);font-size:10px;font-weight:600;padding:3px 9px;border-radius:5px;letter-spacing:.04em;}
+.vc.voted{background:var(--accent-dim);color:var(--accent);border:1px solid rgba(0,255,136,.25);}
 .vc.pending{background:var(--surface2);color:var(--muted2);border:1px solid var(--border);}
 .view{display:none;}
 .view.active{display:block;}
 .analytics-tabs{display:flex;border-bottom:1px solid var(--border);}
-.atab{flex:1;padding:10px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;text-align:center;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;transition:all .2s;}
+.atab{flex:1;padding:9px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;text-align:center;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;transition:all .2s;}
 .atab.active{color:var(--accent);border-bottom-color:var(--accent);}
-.apanel{display:none;padding:12px 16px;}
+.apanel{display:none;padding:12px 14px;}
 .apanel.active{display:block;}
-.form-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);}
+.form-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);}
 .form-row:last-child{border-bottom:none;}
-.form-name{font-family:var(--mono);font-size:12px;font-weight:600;}
-.form-delta{font-family:var(--mono);font-size:11px;font-weight:600;}
+.form-name{font-family:var(--mono);font-size:11px;font-weight:600;}
+.form-delta{font-family:var(--mono);font-size:10px;font-weight:600;}
 .hot{color:var(--accent);}
 .cold{color:var(--red);}
 .neutral{color:var(--muted2);}
-.highlight-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;}
-.highlight-label{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
-.highlight-name{font-family:var(--mono);font-size:16px;font-weight:700;margin-bottom:2px;}
-.highlight-sub{font-size:11px;color:var(--muted2);}
-.highlight-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;}
-.hstat{text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:8px;}
-.hstat-val{font-family:var(--mono);font-size:14px;font-weight:700;}
-.hstat-label{font-size:9px;color:var(--muted);margin-top:2px;}
-.team-compare{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
-.team-box{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;}
-.team-box-name{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
-.team-box-avg{font-family:var(--mono);font-size:24px;font-weight:700;color:var(--accent);}
-.team-box-sub{font-size:10px;color:var(--muted2);margin-top:4px;}
+.highlight-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:11px;margin-bottom:10px;}
+.highlight-label{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:3px;}
+.highlight-name{font-family:var(--mono);font-size:15px;font-weight:700;margin-bottom:2px;}
+.highlight-sub{font-size:10px;color:var(--muted2);}
+.highlight-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;}
+.hstat{text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:7px;}
+.hstat-val{font-family:var(--mono);font-size:13px;font-weight:700;}
+.hstat-label{font-size:9px;color:var(--muted);margin-top:1px;}
+.team-compare{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.team-box{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:11px;text-align:center;}
+.team-box-name{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
+.team-box-avg{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--accent);}
+.team-box-sub{font-size:10px;color:var(--muted2);margin-top:3px;}
 .team-winner{border-color:var(--accent);}
-.voter-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);}
+.voter-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);}
 .voter-row:last-child{border-bottom:none;}
 .voter-name{font-family:var(--mono);font-size:11px;font-weight:600;}
-.voter-bar-wrap{flex:1;margin:0 10px;height:4px;background:var(--border);border-radius:2px;}
+.voter-bar-wrap{flex:1;margin:0 10px;height:3px;background:var(--border);border-radius:2px;}
 .voter-bar-fill{height:100%;border-radius:2px;background:var(--accent);}
 .voter-pct{font-family:var(--mono);font-size:10px;color:var(--muted2);min-width:28px;text-align:right;}
-.at-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px;}
-.at-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px;}
-.at-card-label{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
-.at-card-val{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--accent);}
-.at-card-sub{font-size:11px;color:var(--muted2);margin-top:4px;}
-.games-list{display:flex;flex-direction:column;gap:4px;padding:12px 16px;}
-.game-row{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-radius:6px;background:var(--surface2);border:1px solid var(--border);}
+.at-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px;}
+@media(max-width:700px){.at-grid{grid-template-columns:repeat(2,1fr);}}
+.at-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;}
+.at-card-label{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.at-card-val{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--accent);}
+.at-card-sub{font-size:10px;color:var(--muted2);margin-top:3px;}
+.at-card.gold .at-card-val{color:var(--gold);}
+.games-list{display:flex;flex-direction:column;gap:4px;padding:10px 14px;}
+.game-row{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:6px;background:var(--surface2);border:1px solid var(--border);}
 .game-wk{font-family:var(--mono);font-size:10px;color:var(--muted2);}
 .game-result{font-family:var(--mono);font-size:10px;font-weight:700;}
 .game-result.win{color:var(--accent);}
 .game-result.loss{color:var(--red);}
 .game-result.draw{color:var(--yellow);}
-.game-voters{font-family:var(--mono);font-size:10px;color:var(--muted);}
-.locked-panel{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center;gap:12px;}
-.locked-icon{font-size:48px;margin-bottom:8px;}
-.locked-title{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2);}
-.countdown{display:flex;gap:16px;margin:16px 0;}
-.cd-block{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;min-width:60px;text-align:center;}
-.cd-val{font-family:var(--mono);font-size:24px;font-weight:700;color:var(--accent);}
-.cd-label{font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:4px;letter-spacing:.1em;text-transform:uppercase;}
-.locked-sub{font-size:12px;color:var(--muted);font-family:var(--mono);}
+.locked-panel{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center;gap:10px;}
+.locked-icon{font-size:44px;margin-bottom:6px;}
+.locked-title{font-family:var(--mono);font-weight:700;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2);}
+.countdown{display:flex;gap:12px;margin:14px 0;}
+.cd-block{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;min-width:56px;text-align:center;}
+.cd-val{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--accent);}
+.cd-label{font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:3px;letter-spacing:.1em;text-transform:uppercase;}
+.locked-sub{font-size:11px;color:var(--muted);font-family:var(--mono);}
+.player-select-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px 14px;}
+@media(max-width:500px){.player-select-grid{grid-template-columns:repeat(2,1fr);}}
+.player-btn{padding:8px 10px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;text-align:center;}
+.player-btn:hover,.player-btn.active{border-color:var(--accent);background:var(--accent-dim);color:var(--accent);}
+.pc-content{padding:14px;}
+.pc-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+.pc-avatar{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;font-size:20px;border:2px solid var(--accent);}
+.pc-name{font-family:var(--mono);font-weight:700;font-size:18px;}
+.pc-pos{font-size:11px;color:var(--muted);margin-top:2px;}
+.pc-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+.pc-stat{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center;}
+.pc-stat-val{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--accent);}
+.pc-stat-label{font-size:9px;color:var(--muted);margin-top:2px;font-family:var(--mono);letter-spacing:.08em;text-transform:uppercase;}
+.pc-wl{display:flex;gap:6px;margin-bottom:16px;}
+.pc-wl-block{flex:1;text-align:center;padding:8px;border-radius:8px;border:1px solid var(--border);}
+.pc-wl-val{font-family:var(--mono);font-size:20px;font-weight:700;}
+.pc-wl-label{font-size:9px;color:var(--muted);margin-top:2px;font-family:var(--mono);text-transform:uppercase;}
+.pc-history-title{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+.pc-history{display:flex;flex-direction:column;gap:4px;}
+.pc-history-row{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-radius:6px;background:var(--surface2);border:1px solid var(--border);}
+.pc-history-wk{font-family:var(--mono);font-size:10px;color:var(--muted2);}
+.pc-history-avg{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--accent);}
+.pc-history-bar{flex:1;margin:0 10px;height:3px;background:var(--border);border-radius:2px;}
+.pc-history-fill{height:100%;border-radius:2px;background:var(--accent);}
+.pc-loading{text-align:center;padding:30px;font-family:var(--mono);font-size:11px;color:var(--muted);}
 </style>
 </head>
 <body>
-<div class="ticker-wrap">
-  <div class="ticker-label">BA·LIVE</div>
-  <div class="ticker-track"><div class="ticker-inner" id="tickerInner"></div></div>
+
+<!-- PIN SCREEN -->
+<div class="pin-screen" id="pinScreen">
+  <div class="pin-badge">BA</div>
+  <div class="pin-title">Black Aces FC</div>
+  <div class="pin-sub">Enter PIN to access dashboard</div>
+  <div class="pin-input-wrap">
+    <input class="pin-input" id="p1" maxlength="1" type="password" inputmode="numeric" onkeyup="pinKey(event,this,'p2')"/>
+    <input class="pin-input" id="p2" maxlength="1" type="password" inputmode="numeric" onkeyup="pinKey(event,this,'p3')"/>
+    <input class="pin-input" id="p3" maxlength="1" type="password" inputmode="numeric" onkeyup="pinKey(event,this,'p4')"/>
+    <input class="pin-input" id="p4" maxlength="1" type="password" inputmode="numeric" onkeyup="pinKey(event,this,null)"/>
+  </div>
+  <div class="pin-error" id="pinError"></div>
+  <button class="pin-btn" onclick="checkPin()">Enter</button>
 </div>
+
+<!-- DASHBOARD (hidden until PIN entered) -->
+<div id="dashboardWrap" style="display:none;">
+
 <nav>
   <div class="nav-logo">
     <div class="logo-badge">BA</div>
@@ -148,9 +211,13 @@ main{padding:20px 24px;max-width:1400px;margin:0 auto;}
   </div>
   <div class="live-dot"></div>
   <div class="clock" id="clockEl"></div>
-  <button class="nav-tab active" onclick="showView('weekly',this)">This Week</button>
-  <button class="nav-tab" onclick="showView('alltime',this)">All Time</button>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showView('weekly',this)">This Week</button>
+    <button class="nav-tab" onclick="showView('alltime',this)">All Time</button>
+    <button class="nav-tab" onclick="showView('playercorner',this)">Players</button>
+  </div>
 </nav>
+
 <main>
   <div class="view active" id="view-weekly">
     <div class="stat-row" id="wStats"></div>
@@ -184,33 +251,76 @@ main{padding:20px 24px;max-width:1400px;margin:0 auto;}
     <div class="g2">
       <div class="panel">
         <div class="phdr"><div class="ptitle">🏆 All-Time Leaderboard</div></div>
+        <div id="atPodium"></div>
         <div id="atLb"></div>
       </div>
       <div class="panel">
-        <div class="phdr"><div class="ptitle">📅 Recent Games</div></div>
+        <div class="phdr"><div class="ptitle">📅 Match History</div></div>
         <div class="games-list" id="recentGames"></div>
       </div>
     </div>
   </div>
+
+  <div class="view" id="view-playercorner">
+    <div class="panel">
+      <div class="phdr"><div class="ptitle">👤 Player Corner — Select a Player</div></div>
+      <div class="player-select-grid" id="playerSelectGrid"></div>
+    </div>
+    <div class="panel" id="playerCornerContent" style="margin-top:12px;display:none;">
+      <div class="pc-content" id="pcContent"></div>
+    </div>
+  </div>
 </main>
 
+</div><!-- end dashboardWrap -->
+
 <script>
+const CORRECT_PIN = "9630";
 const SCRIPT_URL = "https://summer-darkness-e6f1.gokhaleshar.workers.dev";
 let PLAYERS = [];
 let ALL_DATA = {};
 const POS_COL = { GK:"#ffd166", DEF:"#3d8bff", MID:"#00ff88", FWD:"#ff3d5a" };
+const AVATAR_COLORS = ["#1a3a6a","#2d1a6a","#1a6a3a","#6a1a2d","#1a556a","#6a3d1a","#3d6a1a","#6a1a55"];
 const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
 
+// PIN LOGIC
+function pinKey(e, current, nextId) {
+  if (current.value && nextId) {
+    document.getElementById(nextId).focus();
+  }
+  if (e.key === "Enter") checkPin();
+}
+
+function checkPin() {
+  const pin = ["p1","p2","p3","p4"].map(id => document.getElementById(id).value).join("");
+  if (pin === CORRECT_PIN) {
+    sessionStorage.setItem("ba_pin", "ok");
+    document.getElementById("pinScreen").style.display = "none";
+    document.getElementById("dashboardWrap").style.display = "block";
+    initDashboard();
+  } else {
+    document.getElementById("pinError").textContent = "Incorrect PIN. Try again.";
+    ["p1","p2","p3","p4"].forEach(id => document.getElementById(id).value = "");
+    document.getElementById("p1").focus();
+    setTimeout(() => document.getElementById("pinError").textContent = "", 2000);
+  }
+}
+
+// Check if already unlocked this session
+if (sessionStorage.getItem("ba_pin") === "ok") {
+  document.getElementById("pinScreen").style.display = "none";
+  document.getElementById("dashboardWrap").style.display = "block";
+}
+
 function clock(){
-  document.getElementById("clockEl").textContent =
-    new Date().toLocaleTimeString("en-IN",{hour12:false,timeZone:"Asia/Kolkata"})+" IST";
+  const el = document.getElementById("clockEl");
+  if (el) el.textContent = new Date().toLocaleTimeString("en-IN",{hour12:false,timeZone:"Asia/Kolkata"})+" IST";
 }
 setInterval(clock,1000); clock();
 
 function nowIST() {
   const now = new Date();
-  const utcMs = now.getTime() + (now.getTimezoneOffset() * 60000);
-  return new Date(utcMs + IST_OFFSET_MS);
+  return new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + IST_OFFSET_MS);
 }
 
 function isResultsUnlocked() {
@@ -222,24 +332,16 @@ function getNextSunday8amUTC() {
   const ist = nowIST();
   const day = ist.getDay();
   const daysUntilSunday = day === 0 ? (ist.getHours() >= 8 ? 7 : 0) : 7 - day;
-  const y = ist.getFullYear();
-  const m = ist.getMonth();
-  const d = ist.getDate() + daysUntilSunday;
-  return new Date(Date.UTC(y, m, d, 2, 30, 0));
+  return new Date(Date.UTC(ist.getFullYear(), ist.getMonth(), ist.getDate() + daysUntilSunday, 2, 30, 0));
 }
 
 function formatCountdown(ms) {
   const totalSecs = Math.max(0, Math.floor(ms / 1000));
-  const hours = Math.floor(totalSecs / 3600);
-  const mins = Math.floor((totalSecs % 3600) / 60);
-  const secs = totalSecs % 60;
-  return { hours, mins, secs };
+  return { hours: Math.floor(totalSecs/3600), mins: Math.floor((totalSecs%3600)/60), secs: totalSecs%60 };
 }
 
 function renderCountdown() {
-  const target = getNextSunday8amUTC();
-  const ms = target - new Date();
-  const { hours, mins, secs } = formatCountdown(ms);
+  const { hours, mins, secs } = formatCountdown(getNextSunday8amUTC() - new Date());
   return `<div class="locked-panel">
     <div class="locked-icon">🔒</div>
     <div class="locked-title">Results drop Sunday 8:00 AM IST</div>
@@ -255,9 +357,7 @@ function renderCountdown() {
 function startCountdownTick() {
   const interval = setInterval(() => {
     if (isResultsUnlocked()) { clearInterval(interval); location.reload(); return; }
-    const target = getNextSunday8amUTC();
-    const ms = target - new Date();
-    const { hours, mins, secs } = formatCountdown(ms);
+    const { hours, mins, secs } = formatCountdown(getNextSunday8amUTC() - new Date());
     const h = document.getElementById("cd-h");
     const m = document.getElementById("cd-m");
     const s = document.getElementById("cd-s");
@@ -265,6 +365,23 @@ function startCountdownTick() {
     if (m) m.textContent = String(mins).padStart(2,"0");
     if (s) s.textContent = String(secs).padStart(2,"0");
   }, 1000);
+}
+
+function avatarColor(name) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
+function initials(name) {
+  return name.split(/[\s.]/g).map(p=>p[0]||"").join("").toUpperCase().slice(0,2);
+}
+
+function starsHtml(avg) {
+  const full = Math.floor(avg);
+  const half = avg - full >= 0.5 ? 1 : 0;
+  const empty = 5 - full - half;
+  return "★".repeat(full) + (half?"½":"") + "☆".repeat(empty);
 }
 
 function showView(id, btn){
@@ -296,10 +413,20 @@ async function loadData(){
     ALL_DATA = { weekly, allTime, teams };
     renderWeekly(weekly, teams, allTime);
     renderAllTime(allTime);
-    buildTicker(allTime && allTime.players);
+    buildPlayerSelectGrid();
   } catch(e) {
     console.error("Dashboard load failed:", e);
   }
+}
+
+function initDashboard() {
+  loadData();
+  setInterval(loadData, 60000);
+}
+
+// Auto-init if already unlocked
+if (sessionStorage.getItem("ba_pin") === "ok") {
+  initDashboard();
 }
 
 function renderWeekly(d, teamsData, allTime){
@@ -307,35 +434,54 @@ function renderWeekly(d, teamsData, allTime){
   document.getElementById("wkLabel").textContent = d.weekKey || "—";
   const unlocked = isResultsUnlocked();
   const top = d.players && d.players[0];
-  const avgRating = d.players && d.players.length
-    ? (d.players.reduce((s,p)=>s+p.avg,0)/d.players.length) : null;
+  const avgRating = d.players && d.players.length ? (d.players.reduce((s,p)=>s+p.avg,0)/d.players.length) : null;
 
   document.getElementById("wStats").innerHTML = `
-    <div class="sc" style="animation-delay:0s"><div class="sc-label">Votes Cast</div><div class="sc-val">${d.totalVoters}/${d.expectedVoters}</div><div class="sc-sub">${d.expectedVoters?Math.round(d.totalVoters/d.expectedVoters*100):0}% done</div></div>
-    <div class="sc" style="animation-delay:.05s"><div class="sc-label">Avg Rating</div><div class="sc-val">${unlocked?(avgRating?avgRating.toFixed(1):"—"):"🔒"}</div><div class="sc-sub">${unlocked?"squad average":"unlocks Sunday 8am"}</div></div>
-    <div class="sc" style="animation-delay:.1s"><div class="sc-label">MVP This Week</div><div class="sc-val" style="font-size:${unlocked?"16px":"28px"}">${unlocked?(top?top.name:"—"):"🔒"}</div><div class="sc-sub">${unlocked?(top?top.avg.toFixed(1)+" ⭐":"no data"):"unlocks Sunday 8am"}</div></div>
-    <div class="sc yellow" style="animation-delay:.15s"><div class="sc-label">Top Rating</div><div class="sc-val">${unlocked?(top?top.avg.toFixed(1):"—"):"🔒"}</div><div class="sc-sub">${unlocked?(top?top.name+" leads":"no votes yet"):"unlocks Sunday 8am"}</div></div>`;
+    <div class="sc"><div class="sc-label">Votes Cast</div><div class="sc-val">${d.totalVoters}/${d.expectedVoters}</div><div class="sc-sub">${d.expectedVoters?Math.round(d.totalVoters/d.expectedVoters*100):0}% done</div></div>
+    <div class="sc"><div class="sc-label">Avg Rating</div><div class="sc-val">${unlocked?(avgRating?avgRating.toFixed(1):"—"):"🔒"}</div><div class="sc-sub">${unlocked?"squad average":"unlocks Sunday 8am"}</div></div>
+    <div class="sc"><div class="sc-label">MVP This Week</div><div class="sc-val" style="font-size:${unlocked?"15px":"26px"}">${unlocked?(top?top.name:"—"):"🔒"}</div><div class="sc-sub">${unlocked?(top?starsHtml(top.avg):"no data"):"unlocks Sunday 8am"}</div></div>
+    <div class="sc gold"><div class="sc-label">Top Rating</div><div class="sc-val">${unlocked?(top?top.avg.toFixed(1):"—"):"🔒"}</div><div class="sc-sub">${unlocked?(top?top.name+" leads":"no votes yet"):"unlocks Sunday 8am"}</div></div>`;
 
-  document.getElementById("wLb").innerHTML = unlocked
-    ? (d.players && d.players.length
-        ? d.players.map((p,i) => {
-            const medals = ["🥇","🥈","🥉"];
-            return `<div class="lb-row" style="animation-delay:${i*.06}s">
-              <div class="lb-rank ${i===0?"g":i===1?"s":i===2?"b":""}">${medals[i]||i+1}</div>
-              <div class="lb-info">
-                <div class="lb-name">${p.name}<span class="pos-pill" style="color:${POS_COL[PLAYERS.find(x=>x.name===p.name)?.pos]||"#fff"}">${PLAYERS.find(x=>x.name===p.name)?.pos||""}</span></div>
-                <div class="lb-meta">${p.count} votes</div>
-              </div>
-              <div class="lb-right">
-                <div class="lb-score up">${p.avg.toFixed(1)}</div>
-                <div class="lb-bar-w"><div class="lb-bar" style="width:${p.avg/5*100}%"></div></div>
-              </div>
-            </div>`;
-          }).join("")
-        : `<div style="padding:30px 15px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--muted)">No votes yet.</div>`)
-    : renderCountdown();
-
-  if (!unlocked) startCountdownTick();
+  if (unlocked && d.players && d.players.length) {
+    const top3 = d.players.slice(0,3);
+    const rest = d.players.slice(3);
+    const podOrder = top3.length >= 2 ? [top3[1], top3[0], top3[2]].filter(Boolean) : top3;
+    const podClasses = top3.length >= 2 ? ["pod-2","pod-1","pod-3"] : ["pod-1","pod-2","pod-3"];
+    const podEmojis = top3.length >= 2 ? ["🥈","🥇","🥉"] : ["🥇","🥈","🥉"];
+    let podHtml = `<div class="podium">`;
+    podOrder.forEach((p, i) => {
+      const bg = avatarColor(p.name);
+      podHtml += `<div class="pod ${podClasses[i]}">
+        <div class="pod-avatar" style="background:${bg}">${initials(p.name)}</div>
+        <div class="pod-name">${p.name}</div>
+        <div class="pod-score">${p.avg.toFixed(1)}</div>
+        <div class="pod-stars">${starsHtml(p.avg)}</div>
+        <div class="pod-block">${podEmojis[i]}</div>
+      </div>`;
+    });
+    podHtml += `</div>`;
+    let lbHtml = rest.map(p => {
+      const bg = avatarColor(p.name);
+      const pos = PLAYERS.find(x=>x.name===p.name)?.pos || "";
+      return `<div class="lb-row">
+        <div class="lb-avatar" style="background:${bg}">${initials(p.name)}</div>
+        <div class="lb-info">
+          <div class="lb-name">${p.name}<span class="pos-pill" style="color:${POS_COL[pos]||"#fff"}">${pos}</span></div>
+          <div class="lb-meta">${p.count} votes · ${starsHtml(p.avg)}</div>
+        </div>
+        <div class="lb-right">
+          <div class="lb-score">${p.avg.toFixed(1)}</div>
+          <div class="lb-bar-w"><div class="lb-bar" style="width:${p.avg/5*100}%"></div></div>
+        </div>
+      </div>`;
+    }).join("");
+    document.getElementById("wLb").innerHTML = podHtml + lbHtml;
+  } else if (!unlocked) {
+    document.getElementById("wLb").innerHTML = renderCountdown();
+    startCountdownTick();
+  } else {
+    document.getElementById("wLb").innerHTML = `<div style="padding:30px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--muted)">No votes yet.</div>`;
+  }
 
   const votedSet = new Set(d.voters||[]);
   const thisWeekNames = new Set([...(d.voters||[]), ...(d.pendingVoters||[])]);
@@ -343,7 +489,6 @@ function renderWeekly(d, teamsData, allTime){
   document.getElementById("vChips").innerHTML = `<div class="vote-chips">${thisWeekPlayers.map(p=>`<span class="vc ${votedSet.has(p.name)?"voted":"pending"}">${votedSet.has(p.name)?"✓ ":""}${p.name}</span>`).join("")}</div>`;
   document.getElementById("vtBadge").textContent = `${d.totalVoters}/${d.expectedVoters}`;
   document.getElementById("vtBadge").className = `pbadge ${d.totalVoters===d.expectedVoters?"g":"r"}`;
-
   renderAnalytics(d, teamsData, allTime, unlocked);
 }
 
@@ -365,28 +510,24 @@ function renderAnalytics(weekly, teamsData, allTime, unlocked){
         <div class="highlight-sub">Biggest jump from last week</div>
         <div class="highlight-stats">
           <div class="hstat"><div class="hstat-val" style="color:var(--accent)">+${mostImproved.delta.toFixed(2)}</div><div class="hstat-label">Delta</div></div>
-          <div class="hstat"><div class="hstat-val">${mostImproved.avg.toFixed(2)}</div><div class="hstat-label">Current Avg</div></div>
+          <div class="hstat"><div class="hstat-val">${mostImproved.avg.toFixed(2)}</div><div class="hstat-label">Avg</div></div>
         </div>
       </div>`;
     } else if (weeklyTop) {
       formHtml += `<div class="highlight-card" style="border-color:rgba(0,255,136,.3)">
         <div class="highlight-label">⭐ This Week's Best</div>
         <div class="highlight-name" style="color:var(--accent)">${weeklyTop.name}</div>
-        <div class="highlight-sub">Highest rated player this week</div>
-        <div class="highlight-stats">
-          <div class="hstat"><div class="hstat-val" style="color:var(--accent)">${weeklyTop.avg.toFixed(2)}</div><div class="hstat-label">Avg Rating</div></div>
-          <div class="hstat"><div class="hstat-val">${weeklyTop.count}</div><div class="hstat-label">Votes</div></div>
-        </div>
+        <div class="highlight-sub">${starsHtml(weeklyTop.avg)} · ${weeklyTop.count} votes</div>
       </div>`;
     }
     if (mostDeclined) {
       formHtml += `<div class="highlight-card" style="border-color:rgba(255,61,90,.3)">
         <div class="highlight-label">📉 Biggest Drop</div>
         <div class="highlight-name" style="color:var(--red)">${mostDeclined.name}</div>
-        <div class="highlight-sub">Biggest decline from last week</div>
+        <div class="highlight-sub">Down from last week</div>
         <div class="highlight-stats">
           <div class="hstat"><div class="hstat-val" style="color:var(--red)">${mostDeclined.delta.toFixed(2)}</div><div class="hstat-label">Delta</div></div>
-          <div class="hstat"><div class="hstat-val">${mostDeclined.avg.toFixed(2)}</div><div class="hstat-label">Current Avg</div></div>
+          <div class="hstat"><div class="hstat-val">${mostDeclined.avg.toFixed(2)}</div><div class="hstat-label">Avg</div></div>
         </div>
       </div>`;
     }
@@ -412,6 +553,7 @@ function renderAnalytics(weekly, teamsData, allTime, unlocked){
     const avgB = unlocked ? getAvg(teamB) : null;
     const aWins = avgA && avgB && avgA > avgB;
     const bWins = avgA && avgB && avgB > avgA;
+    const scoreStr = teamsData.teams.scoreA ? ` (${teamsData.teams.scoreA}-${teamsData.teams.scoreB})` : "";
     document.getElementById("apanel-teams").innerHTML = `
       <div class="team-compare">
         <div class="team-box ${aWins?"team-winner":""}">
@@ -425,7 +567,7 @@ function renderAnalytics(weekly, teamsData, allTime, unlocked){
           <div class="team-box-sub">${unlocked?(bWins?"⭐ Higher rated ":"")+"avg rating":"unlocks Sunday 8am"}</div>
         </div>
       </div>
-      <div style="font-family:var(--mono);font-size:10px;color:var(--muted)">${unlocked?"Based on this week's votes":"Results hidden until Sunday 8am IST"}</div>`;
+      <div style="font-family:var(--mono);font-size:10px;color:var(--muted)">${unlocked?"Based on this week's votes"+scoreStr:"Results hidden until Sunday 8am IST"}</div>`;
   } else {
     document.getElementById("apanel-teams").innerHTML = `<div style="color:var(--muted);font-size:11px;font-family:var(--mono);padding:8px 0">Paste teams in Telegram first</div>`;
   }
@@ -433,9 +575,7 @@ function renderAnalytics(weekly, teamsData, allTime, unlocked){
   const totalGames = allTime && allTime.recentGames ? Math.max(allTime.recentGames.length, 1) : 1;
   const voteMap = {};
   if (ALL_DATA.allTime && ALL_DATA.allTime.players) {
-    ALL_DATA.allTime.players.forEach(p => {
-      voteMap[p.name] = p.gamesPlayed || 0;
-    });
+    ALL_DATA.allTime.players.forEach(p => { voteMap[p.name] = p.gamesPlayed || 0; });
   }
   const thisWeekNames = new Set([...(weekly.voters||[]), ...(weekly.pendingVoters||[])]);
   const thisWeekPlayers = PLAYERS.filter(p => thisWeekNames.has(p.name));
@@ -453,64 +593,137 @@ function renderAnalytics(weekly, teamsData, allTime, unlocked){
 
 function renderAllTime(d){
   if (!d || !d.players || !d.players.length) return;
-  const unlocked = isResultsUnlocked();
   const top = d.players[0];
   const totalGames = d.recentGames ? d.recentGames.length : 0;
   const wins = d.recentGames ? d.recentGames.filter(g=>g.result==="Win").length : 0;
-  const mostImproved = [...d.players].filter(p=>p.delta>0).sort((a,b)=>b.delta-a.delta)[0];
-  document.getElementById("atStats").innerHTML = `
-    <div class="at-card"><div class="at-card-label">All-Time MVP</div><div class="at-card-val">${unlocked?top.name:"🔒"}</div><div class="at-card-sub">${unlocked?top.avg+" avg ⭐":"unlocks Sunday 8am"}</div></div>
-    <div class="at-card"><div class="at-card-label">Games Tracked</div><div class="at-card-val">${totalGames}</div><div class="at-card-sub">this season</div></div>
-    <div class="at-card"><div class="at-card-label">Win Rate</div><div class="at-card-val">${totalGames?Math.round(wins/totalGames*100):0}%</div><div class="at-card-sub">${wins} wins of ${totalGames}</div></div>
-    <div class="at-card"><div class="at-card-label">Most Improved</div><div class="at-card-val" style="font-size:16px">${unlocked?(mostImproved?mostImproved.name:"—"):"🔒"}</div><div class="at-card-sub">${unlocked?(mostImproved?"+"+mostImproved.delta.toFixed(2)+" this week":"need 2+ weeks"):"unlocks Sunday 8am"}</div></div>`;
+  const anchor = d.anchor;
 
-  document.getElementById("atLb").innerHTML = unlocked
-    ? d.players.map((p,i) => {
-        const medals = ["🥇","🥈","🥉"];
-        const deltaStr = p.delta > 0 ? `<span style="color:var(--accent)">+${p.delta}</span>` : p.delta < 0 ? `<span style="color:var(--red)">${p.delta}</span>` : `<span style="color:var(--muted)">—</span>`;
-        return `<div class="lb-row">
-          <div class="lb-rank ${i===0?"g":i===1?"s":i===2?"b":""}">${medals[i]||i+1}</div>
-          <div class="lb-info">
-            <div class="lb-name">${p.name}<span class="pos-pill" style="color:${POS_COL[PLAYERS.find(x=>x.name===p.name)?.pos]||"#fff"}">${PLAYERS.find(x=>x.name===p.name)?.pos||""}</span></div>
-            <div class="lb-meta">${p.gamesPlayed} games · ${p.count} ratings · trend ${deltaStr}</div>
-          </div>
-          <div class="lb-right">
-            <div class="lb-score up">${p.avg.toFixed(1)}</div>
-            <div class="lb-bar-w"><div class="lb-bar" style="width:${p.avg/5*100}%"></div></div>
-          </div>
-        </div>`;
-      }).join("")
-    : `<div class="locked-panel"><div class="locked-icon">🔒</div><div class="locked-title">Leaderboard unlocks Sunday 8am IST</div><div class="locked-sub">Keep voting!</div></div>`;
+  document.getElementById("atStats").innerHTML = `
+    <div class="at-card"><div class="at-card-label">All-Time MVP</div><div class="at-card-val">${top.name}</div><div class="at-card-sub">${top.avg} avg · ${starsHtml(top.avg)}</div></div>
+    <div class="at-card"><div class="at-card-label">Games Tracked</div><div class="at-card-val">${totalGames}</div><div class="at-card-sub">this season</div></div>
+    <div class="at-card"><div class="at-card-label">Win Rate</div><div class="at-card-val">${totalGames?Math.round(wins/totalGames*100):0}%</div><div class="at-card-sub">${wins}W of ${totalGames}</div></div>
+    <div class="at-card gold"><div class="at-card-label">⚓ Anchor Award</div><div class="at-card-val" style="font-size:15px">${anchor?anchor.name:"—"}</div><div class="at-card-sub">${anchor?anchor.winRate+"% win rate · "+anchor.played+" games":"need 3+ games"}</div></div>`;
+
+  const top3 = d.players.slice(0,3);
+  const rest = d.players.slice(3);
+  const podOrder = top3.length >= 2 ? [top3[1], top3[0], top3[2]].filter(Boolean) : top3;
+  const podClasses = top3.length >= 2 ? ["pod-2","pod-1","pod-3"] : ["pod-1","pod-2","pod-3"];
+  const podEmojis = top3.length >= 2 ? ["🥈","🥇","🥉"] : ["🥇","🥈","🥉"];
+  let podHtml = `<div class="podium">`;
+  podOrder.forEach((p, i) => {
+    const bg = avatarColor(p.name);
+    podHtml += `<div class="pod ${podClasses[i]}">
+      <div class="pod-avatar" style="background:${bg}">${initials(p.name)}</div>
+      <div class="pod-name">${p.name}</div>
+      <div class="pod-score">${p.avg.toFixed(1)}</div>
+      <div class="pod-stars">${starsHtml(p.avg)}</div>
+      <div class="pod-block">${podEmojis[i]}</div>
+    </div>`;
+  });
+  podHtml += `</div>`;
+  document.getElementById("atPodium").innerHTML = podHtml;
+
+  document.getElementById("atLb").innerHTML = rest.map(p => {
+    const bg = avatarColor(p.name);
+    const pos = PLAYERS.find(x=>x.name===p.name)?.pos || "";
+    const deltaStr = p.delta > 0 ? `<span style="color:var(--accent)">+${p.delta}</span>` : p.delta < 0 ? `<span style="color:var(--red)">${p.delta}</span>` : `<span style="color:var(--muted)">—</span>`;
+    const wlStr = p.played ? `${p.wins}W ${p.draws}D ${p.losses}L` : "";
+    return `<div class="lb-row">
+      <div class="lb-avatar" style="background:${bg}">${initials(p.name)}</div>
+      <div class="lb-info">
+        <div class="lb-name">${p.name}<span class="pos-pill" style="color:${POS_COL[pos]||"#fff"}">${pos}</span>${wlStr?`<span class="wl-badge">${wlStr}</span>`:""}</div>
+        <div class="lb-meta">${p.gamesPlayed} games · trend ${deltaStr}</div>
+      </div>
+      <div class="lb-right">
+        <div class="lb-score">${p.avg.toFixed(1)}</div>
+        <div class="lb-stars">${starsHtml(p.avg)}</div>
+      </div>
+    </div>`;
+  }).join("");
 
   if (d.recentGames) {
     document.getElementById("recentGames").innerHTML = d.recentGames.map(g => {
       const cls = g.result==="Win"?"win":g.result==="Loss"?"loss":"draw";
       const label = g.result==="Win"?"WIN":g.result==="Loss"?"LOSS":g.result==="Draw"?"DRAW":"—";
-      return `<div class="game-row"><span class="game-wk">${g.weekKey}</span><span class="game-result ${cls}">${label}</span><span class="game-voters">${g.voters} voters</span></div>`;
+      const scoreStr = g.scoreA ? ` ${g.scoreA}-${g.scoreB}` : "";
+      return `<div class="game-row">
+        <span class="game-wk">${g.weekKey}</span>
+        <span class="game-result ${cls}">${label}${scoreStr}</span>
+        <span style="font-family:var(--mono);font-size:10px;color:var(--muted)">${g.voters} voters</span>
+      </div>`;
     }).join("");
   }
 }
 
-function buildTicker(players){
-  const unlocked = isResultsUnlocked();
-  if (!unlocked) {
-    document.getElementById("tickerInner").innerHTML = '<div class="ticker-item"><span class="ticker-name">🔒 Results drop Sunday 8am IST — vote now!</span></div>';
-    return;
-  }
-  if (!players || !players.length) {
-    document.getElementById("tickerInner").innerHTML = '<div class="ticker-item"><span class="ticker-name">No data yet</span></div>';
-    return;
-  }
-  const items = players.map(p => `<div class="ticker-item">
-    <span class="ticker-name">${p.name.toUpperCase()}</span>
-    <span class="${p.delta>=0?"fl":"fd"}">${p.avg.toFixed(2)}</span>
-    <span style="font-size:10px" class="${p.delta>0?"fl":p.delta<0?"fd":"neutral"}">${p.delta>0?"+":""}${p.delta.toFixed(2)}</span>
-  </div>`).join("");
-  document.getElementById("tickerInner").innerHTML = items + items;
+function buildPlayerSelectGrid() {
+  const grid = document.getElementById("playerSelectGrid");
+  grid.innerHTML = PLAYERS.map(p => `
+    <button class="player-btn" onclick="loadPlayerCorner('${p.name}', this)">${p.name}</button>
+  `).join("");
 }
 
-loadData();
-setInterval(loadData, 60000);
+async function loadPlayerCorner(name, btn) {
+  document.querySelectorAll(".player-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  const content = document.getElementById("pcContent");
+  const panel = document.getElementById("playerCornerContent");
+  panel.style.display = "block";
+  content.innerHTML = `<div class="pc-loading">Loading ${name}'s data...</div>`;
+  try {
+    const res = await fetch(SCRIPT_URL + "?action=playerdata&name=" + encodeURIComponent(name));
+    const d = await res.json();
+    const player = PLAYERS.find(p => p.name === name);
+    const pos = player ? player.pos : "";
+    const bg = avatarColor(name);
+    const wl = d.wlRecord || { wins: 0, losses: 0, draws: 0, played: 0 };
+    const winRate = wl.played ? Math.round(wl.wins/wl.played*100) : 0;
+    content.innerHTML = `
+      <div class="pc-header">
+        <div class="pc-avatar" style="background:${bg};border-color:${POS_COL[pos]||"var(--accent)"}">${initials(name)}</div>
+        <div>
+          <div class="pc-name">${name}</div>
+          <div class="pc-pos">${pos} · ${d.ratingHistory?d.ratingHistory.length:0} games played</div>
+        </div>
+      </div>
+      <div class="pc-stats">
+        <div class="pc-stat"><div class="pc-stat-val">${d.avg||"—"}</div><div class="pc-stat-label">Avg Rating</div></div>
+        <div class="pc-stat"><div class="pc-stat-val">${d.best||"—"}</div><div class="pc-stat-label">Best Week</div></div>
+        <div class="pc-stat"><div class="pc-stat-val">${d.consistency||"—"}</div><div class="pc-stat-label">Std Dev</div></div>
+      </div>
+      <div class="pc-wl">
+        <div class="pc-wl-block" style="background:rgba(0,255,136,.07);border-color:rgba(0,255,136,.2)">
+          <div class="pc-wl-val" style="color:var(--accent)">${wl.wins}</div>
+          <div class="pc-wl-label">Wins</div>
+        </div>
+        <div class="pc-wl-block" style="background:rgba(255,209,102,.07);border-color:rgba(255,209,102,.2)">
+          <div class="pc-wl-val" style="color:var(--yellow)">${wl.draws}</div>
+          <div class="pc-wl-label">Draws</div>
+        </div>
+        <div class="pc-wl-block" style="background:rgba(255,61,90,.07);border-color:rgba(255,61,90,.2)">
+          <div class="pc-wl-val" style="color:var(--red)">${wl.losses}</div>
+          <div class="pc-wl-label">Losses</div>
+        </div>
+        <div class="pc-wl-block" style="background:var(--surface2)">
+          <div class="pc-wl-val" style="color:var(--accent)">${winRate}%</div>
+          <div class="pc-wl-label">Win Rate</div>
+        </div>
+      </div>
+      <div class="pc-history-title">Rating History</div>
+      <div class="pc-history">
+        ${d.ratingHistory && d.ratingHistory.length
+          ? d.ratingHistory.map(h => `
+            <div class="pc-history-row">
+              <span class="pc-history-wk">${h.weekKey}</span>
+              <div class="pc-history-bar"><div class="pc-history-fill" style="width:${h.avg/5*100}%"></div></div>
+              <span class="pc-history-avg">${h.avg} ⭐</span>
+            </div>`).join("")
+          : `<div style="font-family:var(--mono);font-size:11px;color:var(--muted);padding:8px 0">No rating history yet</div>`
+        }
+      </div>`;
+  } catch(e) {
+    content.innerHTML = `<div class="pc-loading">Failed to load. Please try again.</div>`;
+  }
+}
 </script>
 </body>
 </html>
