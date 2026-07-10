@@ -498,7 +498,6 @@ function renderAnalytics(weekly, teamsData, allTime, unlocked){
   const mostImproved = [...players].filter(p=>p.delta>0).sort((a,b)=>b.delta-a.delta)[0];
   const mostDeclined = [...players].filter(p=>p.delta<0).sort((a,b)=>a.delta-b.delta)[0];
   const weeklyTop = weekly.players && weekly.players[0];
-  const sorted = [...players].sort((a,b) => Math.abs(b.delta) - Math.abs(a.delta));
 
   let formHtml = "";
   {
@@ -530,14 +529,17 @@ function renderAnalytics(weekly, teamsData, allTime, unlocked){
         </div>
       </div>`;
     }
-    formHtml += sorted.length
-      ? sorted.slice(0,6).map(p => {
+    const formPlayers = [...players]
+      .filter(p => (p.gamesPlayed || 0) >= 1)
+      .sort((a,b) => Math.abs(b.delta) - Math.abs(a.delta) || a.name.localeCompare(b.name));
+    formHtml += formPlayers.length
+      ? formPlayers.map(p => {
           const cls = p.delta > 0.2 ? "hot" : p.delta < -0.2 ? "cold" : "neutral";
           const arrow = p.delta > 0.2 ? "↑" : p.delta < -0.2 ? "↓" : "→";
           const label = p.delta > 0.2 ? "Hot" : p.delta < -0.2 ? "Cold" : "Stable";
           return `<div class="form-row"><span class="form-name">${p.name}</span><span class="form-delta ${cls}">${arrow} ${label} (${p.delta>0?"+":""}${p.delta.toFixed(2)})</span></div>`;
         }).join("")
-      : `<div style="color:var(--muted);font-size:11px;font-family:var(--mono);padding:8px 0">Need 2+ weeks of data</div>`;
+      : `<div style="color:var(--muted);font-size:11px;font-family:var(--mono);padding:8px 0">No match data yet</div>`;
   }
   document.getElementById("apanel-form").innerHTML = formHtml;
 
