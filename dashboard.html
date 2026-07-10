@@ -17,7 +17,7 @@
   --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;}
 
 /* PIN SCREEN */
 .pin-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:24px;}
@@ -125,11 +125,6 @@ main{padding:16px 20px;max-width:1400px;margin:0 auto;}
 .upcoming-sub{font-family:var(--mono);font-size:10px;color:var(--muted2);}
 .view{display:none;}
 .view.active{display:block;}
-.analytics-tabs{display:flex;border-bottom:1px solid var(--border);}
-.atab{flex:1;padding:9px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;text-align:center;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;transition:all .2s;}
-.atab.active{color:var(--accent);border-bottom-color:var(--accent);}
-.apanel{display:none;padding:12px 14px;}
-.apanel.active{display:block;}
 .form-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);}
 .form-row:last-child{border-bottom:none;}
 .form-name{font-family:var(--mono);font-size:11px;font-weight:600;}
@@ -151,12 +146,6 @@ main{padding:16px 20px;max-width:1400px;margin:0 auto;}
 .team-box-avg{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--accent);}
 .team-box-sub{font-size:10px;color:var(--muted2);margin-top:3px;}
 .team-winner{border-color:var(--accent);}
-.voter-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);}
-.voter-row:last-child{border-bottom:none;}
-.voter-name{font-family:var(--mono);font-size:11px;font-weight:600;}
-.voter-bar-wrap{flex:1;margin:0 10px;height:3px;background:var(--border);border-radius:2px;}
-.voter-bar-fill{height:100%;border-radius:2px;background:var(--accent);}
-.voter-pct{font-family:var(--mono);font-size:10px;color:var(--muted2);min-width:28px;text-align:right;}
 .at-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px;}
 @media(max-width:700px){.at-grid{grid-template-columns:repeat(2,1fr);}}
 .at-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;}
@@ -192,6 +181,8 @@ main{padding:16px 20px;max-width:1400px;margin:0 auto;}
 .player-btn .pb-name{font-family:var(--mono);font-size:11px;font-weight:600;position:relative;z-index:1;}
 .player-btn .pb-pos{font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:.08em;padding:1px 6px;border-radius:4px;background:var(--surface3);position:relative;z-index:1;}
 .pc-content{padding:14px;}
+.pc-back{display:inline-flex;align-items:center;gap:6px;margin-bottom:16px;padding:8px 16px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--accent);font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.04em;cursor:pointer;transition:all .18s;}
+.pc-back:hover{border-color:var(--accent);background:var(--accent-dim);transform:translateX(-2px);}
 .pc-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
 .pc-avatar{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;font-size:20px;border:2px solid var(--accent);}
 .pc-name{font-family:var(--mono);font-weight:700;font-size:18px;}
@@ -260,15 +251,8 @@ main{padding:16px 20px;max-width:1400px;margin:0 auto;}
       </div>
       <div class="col-stack">
         <div class="panel">
-          <div class="phdr"><div class="ptitle">📊 Analytics</div></div>
-          <div class="analytics-tabs">
-            <div class="atab active" onclick="showAnalytics('form',this)">Form</div>
-            <div class="atab" onclick="showAnalytics('teams',this)">Teams</div>
-            <div class="atab" onclick="showAnalytics('voters',this)">Voters</div>
-          </div>
-          <div class="apanel active" id="apanel-form"></div>
-          <div class="apanel" id="apanel-teams"></div>
-          <div class="apanel" id="apanel-voters"></div>
+          <div class="phdr"><div class="ptitle">⚔️ Match-up</div></div>
+          <div id="apanel-teams" style="padding:12px 14px;"></div>
         </div>
         <div class="panel">
           <div class="phdr"><div class="ptitle">🗳️ Vote Tracker</div><div class="pbadge r" id="vtBadge">0/0</div></div>
@@ -295,14 +279,18 @@ main{padding:16px 20px;max-width:1400px;margin:0 auto;}
         <div class="games-list" id="recentGames"></div>
       </div>
     </div>
+    <div class="panel" style="margin-top:12px;">
+      <div class="phdr"><div class="ptitle">📊 Form Guide</div><div class="pbadge g">Trends</div></div>
+      <div id="apanel-form" style="padding:12px 14px;"></div>
+    </div>
   </div>
 
   <div class="view" id="view-playercorner">
-    <div class="panel">
+    <div class="panel" id="playerSelectPanel">
       <div class="phdr"><div class="ptitle">👤 Player Corner — Select a Player</div></div>
       <div class="player-select-grid" id="playerSelectGrid"></div>
     </div>
-    <div class="panel" id="playerCornerContent" style="margin-top:12px;display:none;">
+    <div class="panel" id="playerCornerContent" style="display:none;">
       <div class="pc-content" id="pcContent"></div>
     </div>
   </div>
@@ -428,13 +416,6 @@ function showView(id, btn){
   btn.classList.add("active");
 }
 
-function showAnalytics(id, tab){
-  document.querySelectorAll(".atab").forEach(t=>t.classList.remove("active"));
-  document.querySelectorAll(".apanel").forEach(p=>p.classList.remove("active"));
-  tab.classList.add("active");
-  document.getElementById("apanel-"+id).classList.add("active");
-}
-
 async function loadData(){
   try {
     const [playersRes, weeklyRes, allTimeRes, teamsRes, standingsRes] = await Promise.all([
@@ -556,9 +537,7 @@ function renderAnalytics(weekly, teamsData, allTime, unlocked){
   const sorted = [...players].sort((a,b) => Math.abs(b.delta) - Math.abs(a.delta));
 
   let formHtml = "";
-  if (!unlocked) {
-    formHtml = `<div style="text-align:center;padding:20px;font-family:var(--mono);font-size:11px;color:var(--muted)">🔒 Form guide unlocks Sunday 8am IST</div>`;
-  } else {
+  {
     if (mostImproved) {
       formHtml += `<div class="highlight-card" style="border-color:rgba(0,255,136,.3)">
         <div class="highlight-label">🔥 Most Improved</div>
@@ -627,24 +606,6 @@ function renderAnalytics(weekly, teamsData, allTime, unlocked){
   } else {
     document.getElementById("apanel-teams").innerHTML = `<div style="color:var(--muted);font-size:11px;font-family:var(--mono);padding:8px 0">Paste teams in Telegram first</div>`;
   }
-
-  const totalGames = allTime && allTime.recentGames ? Math.max(allTime.recentGames.length, 1) : 1;
-  const voteMap = {};
-  if (ALL_DATA.allTime && ALL_DATA.allTime.players) {
-    ALL_DATA.allTime.players.forEach(p => { voteMap[p.name] = p.gamesPlayed || 0; });
-  }
-  const thisWeekNames = new Set([...(weekly.voters||[]), ...(weekly.pendingVoters||[])]);
-  const thisWeekPlayers = PLAYERS.filter(p => thisWeekNames.has(p.name));
-  const votersSorted = thisWeekPlayers.map(p => ({
-    name: p.name,
-    pct: Math.min(Math.round(((voteMap[p.name]||0)/totalGames)*100), 100)
-  })).sort((a,b) => b.pct - a.pct);
-  document.getElementById("apanel-voters").innerHTML = votersSorted.map(p => `
-    <div class="voter-row">
-      <span class="voter-name">${p.name}</span>
-      <div class="voter-bar-wrap"><div class="voter-bar-fill" style="width:${p.pct}%"></div></div>
-      <span class="voter-pct">${p.pct}%</span>
-    </div>`).join("");
 }
 
 function renderAllTime(d){
@@ -773,12 +734,13 @@ function buildPlayerSelectGrid() {
 }
 
 async function loadPlayerCorner(name, btn) {
-  document.querySelectorAll(".player-btn").forEach(b => b.classList.remove("active"));
-  btn.classList.add("active");
   const content = document.getElementById("pcContent");
   const panel = document.getElementById("playerCornerContent");
+  const selectPanel = document.getElementById("playerSelectPanel");
+  selectPanel.style.display = "none";
   panel.style.display = "block";
   content.innerHTML = `<div class="pc-loading">Loading ${name}'s data...</div>`;
+  window.scrollTo({top:0,behavior:"smooth"});
   try {
     const res = await fetch(SCRIPT_URL + "?action=playerdata&name=" + encodeURIComponent(name));
     const d = await res.json();
@@ -788,6 +750,7 @@ async function loadPlayerCorner(name, btn) {
     const wl = d.wlRecord || { wins: 0, losses: 0, draws: 0, played: 0 };
     const winRate = wl.played ? Math.round(wl.wins/wl.played*100) : 0;
     content.innerHTML = `
+      <button class="pc-back" onclick="closePlayerCorner()">← Back to all players</button>
       <div class="pc-header">
         <div class="pc-avatar" style="background:${bg};border-color:${POS_COL[pos]||"var(--accent)"}">${initials(name)}</div>
         <div>
@@ -831,8 +794,14 @@ async function loadPlayerCorner(name, btn) {
         }
       </div>`;
   } catch(e) {
-    content.innerHTML = `<div class="pc-loading">Failed to load. Please try again.</div>`;
+    content.innerHTML = `<button class="pc-back" onclick="closePlayerCorner()">← Back to all players</button><div class="pc-loading">Failed to load. Please try again.</div>`;
   }
+}
+
+function closePlayerCorner() {
+  document.getElementById("playerCornerContent").style.display = "none";
+  document.getElementById("playerSelectPanel").style.display = "block";
+  window.scrollTo({top:0,behavior:"smooth"});
 }
 </script>
 </body>
