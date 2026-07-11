@@ -24,6 +24,22 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 .force-reveal:hover{border-color:var(--muted2);color:var(--text);}
 .force-reveal:disabled{opacity:.5;cursor:default;}
 
+/* FORCE REVEAL MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;z-index:9999;background:rgba(2,4,8,.82);backdrop-filter:blur(3px);align-items:center;justify-content:center;padding:20px;}
+.modal-box{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:24px;width:100%;max-width:340px;display:flex;flex-direction:column;gap:10px;animation:fadeUp .22s ease both;}
+.modal-title{font-family:var(--display);font-weight:700;font-size:17px;color:var(--text);}
+.modal-sub{font-family:var(--mono);font-size:11px;color:var(--muted2);margin-bottom:4px;}
+.modal-input{width:100%;padding:12px 14px;border-radius:9px;border:1.5px solid var(--border);background:var(--surface2);color:var(--accent);font-family:var(--mono);font-size:18px;font-weight:700;letter-spacing:.3em;text-align:center;outline:none;transition:border-color .18s;}
+.modal-input:focus{border-color:var(--accent);}
+.modal-err{font-family:var(--mono);font-size:11px;color:var(--red);min-height:15px;}
+.modal-actions{display:flex;gap:8px;margin-top:2px;}
+.modal-btn{flex:1;padding:11px;border-radius:9px;font-family:var(--display);font-size:13px;font-weight:600;cursor:pointer;transition:all .18s;border:1px solid var(--border2);}
+.modal-btn.ghost{background:transparent;color:var(--muted2);}
+.modal-btn.ghost:hover{color:var(--text);border-color:var(--muted);}
+.modal-btn.primary{background:var(--accent-dim);border-color:var(--accent);color:var(--accent);}
+.modal-btn.primary:hover{background:rgba(0,255,136,.2);}
+.modal-btn:disabled{opacity:.55;cursor:default;}
+
 /* NAV */
 nav{display:flex;align-items:center;padding:0 20px;height:56px;border-bottom:1px solid var(--border);background:var(--surface);gap:12px;position:sticky;top:0;z-index:100;}
 .nav-logo{display:flex;align-items:center;gap:10px;margin-right:auto;}
@@ -309,11 +325,36 @@ const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
 // The dashboard itself is public. The PIN guards only this one action:
 // unlocking results when someone hasn't voted. It's offered from the
 // "waiting" screen, which only appears after Sunday 8am IST.
-async function forceReveal() {
-  const pin = window.prompt("Enter admin PIN to reveal results without all votes:");
-  if (!pin) return;
-  const btn = document.getElementById("forceRevealBtn");
-  if (btn) { btn.textContent = "Unlocking..."; btn.disabled = true; }
+//
+// Uses an in-page modal rather than window.prompt(), because browsers
+// suppress native dialogs in some contexts and this override has to work.
+function openRevealModal() {
+  document.getElementById("revealModal").style.display = "flex";
+  document.getElementById("revealErr").textContent = "";
+  const inp = document.getElementById("revealPin");
+  inp.value = "";
+  setTimeout(() => inp.focus(), 50);
+}
+
+function closeRevealModal() {
+  document.getElementById("revealModal").style.display = "none";
+}
+
+function revealKey(e) {
+  if (e.key === "Enter") submitReveal();
+  if (e.key === "Escape") closeRevealModal();
+}
+
+async function submitReveal() {
+  const pin = document.getElementById("revealPin").value.trim();
+  const err = document.getElementById("revealErr");
+  const btn = document.getElementById("revealSubmit");
+  if (!pin) { err.textContent = "Enter the PIN."; return; }
+
+  btn.textContent = "Unlocking...";
+  btn.disabled = true;
+  err.textContent = "";
+
   try {
     const res = await fetch(SCRIPT_URL, {
       method: "POST",
@@ -322,18 +363,17 @@ async function forceReveal() {
     });
     const d = await res.json();
     if (d.success) {
+      closeRevealModal();
       loadData();
-    } else if (d.error === "bad_pin") {
-      alert("Incorrect PIN.");
-      if (btn) { btn.textContent = "Force reveal"; btn.disabled = false; }
-    } else {
-      alert(d.message || "Could not reveal.");
-      if (btn) { btn.textContent = "Force reveal"; btn.disabled = false; }
+      return;
     }
+    err.textContent = d.error === "bad_pin" ? "Incorrect PIN."
+                    : (d.message || "Could not reveal.");
   } catch (e) {
-    alert("Something went wrong. Try again.");
-    if (btn) { btn.textContent = "Force reveal"; btn.disabled = false; }
+    err.textContent = "Network error. Try again.";
   }
+  btn.textContent = "Reveal results";
+  btn.disabled = false;
 }
 
 function clock(){
@@ -414,7 +454,7 @@ function renderWaiting(d) {
     <div class="waiting-sub">Results unlock the moment everyone has voted</div>
     <div class="pending-wrap">${chips}</div>
     <div class="locked-sub">${d.totalVoters}/${d.expectedVoters} in · chase them up 👊</div>
-    <button class="force-reveal" id="forceRevealBtn" onclick="forceReveal()">Force reveal</button>
+    <button class="force-reveal" id="forceRevealBtn" onclick="openRevealModal()">Force reveal</button>
   </div>`;
 }
 
@@ -880,5 +920,20 @@ function closePlayerCorner() {
   window.scrollTo({top:0,behavior:"smooth"});
 }
 </script>
+<!-- FORCE REVEAL MODAL (custodian only) -->
+<div class="modal-overlay" id="revealModal">
+  <div class="modal-box">
+    <div class="modal-title">Force reveal</div>
+    <div class="modal-sub">Unlock results without all votes in.</div>
+    <input class="modal-input" id="revealPin" type="password" inputmode="numeric"
+           maxlength="6" placeholder="PIN" onkeyup="revealKey(event)"/>
+    <div class="modal-err" id="revealErr"></div>
+    <div class="modal-actions">
+      <button class="modal-btn ghost" onclick="closeRevealModal()">Cancel</button>
+      <button class="modal-btn primary" id="revealSubmit" onclick="submitReveal()">Reveal results</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
