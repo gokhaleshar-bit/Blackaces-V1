@@ -554,8 +554,6 @@ function renderAnalytics(weekly, teamsData, allTime, unlocked){
   const players = allTime && allTime.players ? allTime.players : [];
   const mostImproved = [...players].filter(p=>p.delta>0).sort((a,b)=>b.delta-a.delta)[0];
   const mostDeclined = [...players].filter(p=>p.delta<0).sort((a,b)=>a.delta-b.delta)[0];
-  const weeklyTop = weekly.players && weekly.players[0];
-
   let formHtml = "";
   {
     if (mostImproved) {
@@ -567,12 +565,6 @@ function renderAnalytics(weekly, teamsData, allTime, unlocked){
           <div class="hstat"><div class="hstat-val" style="color:var(--accent)">+${mostImproved.delta.toFixed(2)}</div><div class="hstat-label">Delta</div></div>
           <div class="hstat"><div class="hstat-val">${mostImproved.avg.toFixed(2)}</div><div class="hstat-label">Avg</div></div>
         </div>
-      </div>`;
-    } else if (weeklyTop) {
-      formHtml += `<div class="highlight-card" style="border-color:rgba(0,255,136,.3)">
-        <div class="highlight-label">⭐ This Week's Best</div>
-        <div class="highlight-name" style="color:var(--accent)">${weeklyTop.name}</div>
-        <div class="highlight-sub">${starsHtml(weeklyTop.avg)} · ${weeklyTop.count} votes</div>
       </div>`;
     }
     if (mostDeclined) {
@@ -635,13 +627,16 @@ function renderAllTime(d){
   if (!d || !d.players || !d.players.length) return;
   const top = d.players[0];
   const totalGames = d.recentGames ? d.recentGames.length : 0;
-  const wins = d.recentGames ? d.recentGames.filter(g=>g.result==="Win").length : 0;
   const anchor = d.anchor;
+  // Mean rating across every rated player (weighted by each player's own average).
+  const squadAvg = d.players.length
+    ? d.players.reduce((s,p) => s + p.avg, 0) / d.players.length
+    : null;
 
   document.getElementById("atStats").innerHTML = `
     <div class="at-card"><div class="at-card-label">All-Time MVP</div><div class="at-card-val">${top.name}</div><div class="at-card-sub">${top.avg} avg · ${starsHtml(top.avg)}</div></div>
     <div class="at-card"><div class="at-card-label">Games Tracked</div><div class="at-card-val">${totalGames}</div><div class="at-card-sub">this season</div></div>
-    <div class="at-card"><div class="at-card-label">Win Rate</div><div class="at-card-val">${totalGames?Math.round(wins/totalGames*100):0}%</div><div class="at-card-sub">${wins}W of ${totalGames}</div></div>
+    <div class="at-card"><div class="at-card-label">Squad Avg Rating</div><div class="at-card-val">${squadAvg !== null ? squadAvg.toFixed(2) : "—"}</div><div class="at-card-sub">${squadAvg !== null ? "across " + d.players.length + " players" : "no ratings yet"}</div></div>
     <div class="at-card gold"><div class="at-card-label">🏅 The Special One</div><div class="at-card-val" style="font-size:15px">${SPECIAL_UNLOCKED&&anchor?anchor.name:"Coming soon"}</div><div class="at-card-sub">${SPECIAL_UNLOCKED&&anchor?anchor.winRate+"% win rate · "+anchor.played+" games":"&nbsp;"}</div></div>`;
 
   const top3 = d.players.slice(0,3);
