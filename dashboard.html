@@ -19,17 +19,10 @@
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;}
 
-/* PIN SCREEN */
-.pin-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:24px;}
-.pin-badge{width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,#1a3a6a,#0d5c3a);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:700;font-size:24px;color:var(--accent);}
-.pin-title{font-family:var(--display);font-weight:700;font-size:18px;letter-spacing:.02em;color:var(--text);}
-.pin-sub{font-size:12px;color:var(--muted);font-family:var(--mono);}
-.pin-input-wrap{display:flex;gap:10px;}
-.pin-input{width:52px;height:60px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);color:var(--accent);font-family:var(--mono);font-size:24px;font-weight:700;text-align:center;outline:none;transition:border-color .2s;}
-.pin-input:focus{border-color:var(--accent);}
-.pin-btn{padding:12px 32px;border-radius:10px;border:none;background:linear-gradient(135deg,#1a3a6a,#0d5c3a);color:var(--accent);font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:.04em;cursor:pointer;transition:opacity .2s;}
-.pin-btn:hover{opacity:.85;}
-.pin-error{font-family:var(--mono);font-size:11px;color:var(--red);height:16px;}
+/* FORCE REVEAL (custodian escape hatch on the waiting screen) */
+.force-reveal{margin-top:18px;padding:7px 16px;border-radius:8px;background:transparent;border:1px solid var(--border2);color:var(--muted);font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:all .18s;}
+.force-reveal:hover{border-color:var(--muted2);color:var(--text);}
+.force-reveal:disabled{opacity:.5;cursor:default;}
 
 /* NAV */
 nav{display:flex;align-items:center;padding:0 20px;height:56px;border-bottom:1px solid var(--border);background:var(--surface);gap:12px;position:sticky;top:0;z-index:100;}
@@ -175,6 +168,10 @@ main{padding:16px 20px;max-width:1400px;margin:0 auto;}
 .cd-val{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--accent);}
 .cd-label{font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:3px;letter-spacing:.1em;text-transform:uppercase;}
 .locked-sub{font-size:11px;color:var(--muted);font-family:var(--mono);}
+.waiting-sub{font-family:var(--mono);font-size:11px;color:var(--muted2);margin-top:-2px;}
+.pending-wrap{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:520px;margin:14px 0 10px;}
+.pending-chip{font-family:var(--mono);font-size:11px;font-weight:600;padding:5px 11px;border-radius:6px;background:var(--red-dim);color:var(--red);border:1px solid rgba(255,61,90,.3);animation:nudge 2.5s ease-in-out infinite;}
+@keyframes nudge{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
 .player-select-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:14px;}
 @media(max-width:700px){.player-select-grid{grid-template-columns:repeat(3,1fr);}}
 @media(max-width:480px){.player-select-grid{grid-template-columns:repeat(2,1fr);}}
@@ -214,23 +211,8 @@ main{padding:16px 20px;max-width:1400px;margin:0 auto;}
 </head>
 <body>
 
-<!-- PIN SCREEN -->
-<div class="pin-screen" id="pinScreen">
-  <div class="pin-badge">BA</div>
-  <div class="pin-title">Black Aces FC</div>
-  <div class="pin-sub">Enter PIN to access dashboard</div>
-  <div class="pin-input-wrap">
-    <input class="pin-input" id="p1" maxlength="1" type="password" inputmode="numeric" onkeyup="pinKey(event,this,'p2')"/>
-    <input class="pin-input" id="p2" maxlength="1" type="password" inputmode="numeric" onkeyup="pinKey(event,this,'p3')"/>
-    <input class="pin-input" id="p3" maxlength="1" type="password" inputmode="numeric" onkeyup="pinKey(event,this,'p4')"/>
-    <input class="pin-input" id="p4" maxlength="1" type="password" inputmode="numeric" onkeyup="pinKey(event,this,null)"/>
-  </div>
-  <div class="pin-error" id="pinError"></div>
-  <button class="pin-btn" onclick="checkPin()">Enter</button>
-</div>
-
-<!-- DASHBOARD (hidden until PIN entered) -->
-<div id="dashboardWrap" style="display:none;">
+<!-- DASHBOARD (public to the squad; PIN only guards force-reveal) -->
+<div id="dashboardWrap">
 
 <nav>
   <div class="nav-logo">
@@ -315,7 +297,6 @@ main{padding:16px 20px;max-width:1400px;margin:0 auto;}
 </div><!-- end dashboardWrap -->
 
 <script>
-const CORRECT_PIN = "9630";
 const SCRIPT_URL = "https://summer-darkness-e6f1.gokhaleshar.workers.dev";
 let PLAYERS = [];
 let ALL_DATA = {};
@@ -324,31 +305,35 @@ const POS_COL = { GK:"#ffd166", DEF:"#3d8bff", MID:"#00ff88", FWD:"#ff3d5a" };
 const AVATAR_COLORS = ["#22314f","#2a3550","#233f4a","#3a2f4c","#2c3a44","#3d3550","#2f3d3a","#42324a"];
 const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
 
-// PIN LOGIC
-function pinKey(e, current, nextId) {
-  if (current.value && nextId) document.getElementById(nextId).focus();
-  if (e.key === "Enter") checkPin();
-}
-
-function checkPin() {
-  const pin = ["p1","p2","p3","p4"].map(id => document.getElementById(id).value).join("");
-  if (pin === CORRECT_PIN) {
-    sessionStorage.setItem("ba_pin", "ok");
-    document.getElementById("pinScreen").style.display = "none";
-    document.getElementById("dashboardWrap").style.display = "block";
-    initDashboard();
-  } else {
-    document.getElementById("pinError").textContent = "Incorrect PIN. Try again.";
-    ["p1","p2","p3","p4"].forEach(id => document.getElementById(id).value = "");
-    document.getElementById("p1").focus();
-    setTimeout(() => document.getElementById("pinError").textContent = "", 2000);
+// ---------- FORCE REVEAL (custodian only) ----------
+// The dashboard itself is public. The PIN guards only this one action:
+// unlocking results when someone hasn't voted. It's offered from the
+// "waiting" screen, which only appears after Sunday 8am IST.
+async function forceReveal() {
+  const pin = window.prompt("Enter admin PIN to reveal results without all votes:");
+  if (!pin) return;
+  const btn = document.getElementById("forceRevealBtn");
+  if (btn) { btn.textContent = "Unlocking..."; btn.disabled = true; }
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "forceReveal", pin: pin })
+    });
+    const d = await res.json();
+    if (d.success) {
+      loadData();
+    } else if (d.error === "bad_pin") {
+      alert("Incorrect PIN.");
+      if (btn) { btn.textContent = "Force reveal"; btn.disabled = false; }
+    } else {
+      alert(d.message || "Could not reveal.");
+      if (btn) { btn.textContent = "Force reveal"; btn.disabled = false; }
+    }
+  } catch (e) {
+    alert("Something went wrong. Try again.");
+    if (btn) { btn.textContent = "Force reveal"; btn.disabled = false; }
   }
-}
-
-// Already unlocked this session?
-if (sessionStorage.getItem("ba_pin") === "ok") {
-  document.getElementById("pinScreen").style.display = "none";
-  document.getElementById("dashboardWrap").style.display = "block";
 }
 
 function clock(){
@@ -362,9 +347,35 @@ function nowIST() {
   return new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + IST_OFFSET_MS);
 }
 
-function isResultsUnlocked() {
+// Reveal state pushed from the backend (buildWeekly).
+// Results only unlock when the time gate passes AND everyone has voted
+// (or the custodian has overridden).
+let REVEAL = { timeGatePassed:false, votingComplete:false, revealOverride:false, revealed:false };
+
+// Which phase of the week are we in? Drives the entire "This Week" tab.
+//
+//   Sat / Sun<8am        -> "live"      voting open, results locked
+//   Sun>=8am, not all in -> "waiting"   time is up but votes are missing
+//   Sun>=8am, all voted  -> "revealed"  results out
+//   Mon - Fri            -> "upcoming"  last match is history (see All Time)
+//
+// If the reveal never happened (someone never voted), the week stays locked
+// even into Mon-Fri, so "upcoming" only applies once results actually landed.
+function weekPhase() {
   const ist = nowIST();
-  return ist.getDay() === 0 && ist.getHours() >= 8;
+  const day = ist.getDay();   // 0=Sun ... 6=Sat
+
+  if (day === 6) return "live";                       // Saturday
+  if (day === 0 && ist.getHours() < 8) return "live"; // Sunday pre-8am
+
+  // Time gate has passed (Sun >=8am, or Mon-Fri)
+  if (!REVEAL.revealed) return "waiting";             // votes still missing
+  if (day === 0) return "revealed";                   // Sunday, all in
+  return "upcoming";                                  // Mon-Fri, already revealed
+}
+
+function isResultsUnlocked() {
+  return weekPhase() === "revealed";
 }
 
 function getNextSunday8amUTC() {
@@ -389,7 +400,36 @@ function renderCountdown() {
       <div class="cd-block"><div class="cd-val" id="cd-m">${String(mins).padStart(2,"0")}</div><div class="cd-label">Mins</div></div>
       <div class="cd-block"><div class="cd-val" id="cd-s">${String(secs).padStart(2,"0")}</div><div class="cd-label">Secs</div></div>
     </div>
-    <div class="locked-sub">Vote now while you still can 👆</div>
+    <div class="locked-sub">Everyone must vote to unlock 👆</div>
+  </div>`;
+}
+
+function renderWaiting(d) {
+  const pending = d.pendingVoters || [];
+  const chips = pending.map(n => `<span class="pending-chip">${n}</span>`).join("");
+  const n = pending.length;
+  return `<div class="locked-panel">
+    <div class="locked-icon">⏳</div>
+    <div class="locked-title">Waiting on ${n} ${n === 1 ? "vote" : "votes"}</div>
+    <div class="waiting-sub">Results unlock the moment everyone has voted</div>
+    <div class="pending-wrap">${chips}</div>
+    <div class="locked-sub">${d.totalVoters}/${d.expectedVoters} in · chase them up 👊</div>
+    <button class="force-reveal" id="forceRevealBtn" onclick="forceReveal()">Force reveal</button>
+  </div>`;
+}
+
+function renderUpcoming() {
+  const ist = nowIST();
+  const day = ist.getDay();               // 1=Mon ... 5=Fri here
+  const daysToSat = (6 - day + 7) % 7 || 7;
+  const label = daysToSat === 1 ? "Tomorrow" : "In " + daysToSat + " days";
+  return `<div class="locked-panel">
+    <div class="locked-icon">⚽</div>
+    <div class="locked-title">Next match — Saturday</div>
+    <div class="countdown">
+      <div class="cd-block"><div class="cd-val">${daysToSat}</div><div class="cd-label">${daysToSat === 1 ? "Day" : "Days"}</div></div>
+    </div>
+    <div class="locked-sub">${label} · last match is in All Time 👆</div>
   </div>`;
 }
 
@@ -452,6 +492,12 @@ async function loadData(){
     const teams = await teamsRes.json();
     const standings = await standingsRes.json();
     SPECIAL_UNLOCKED = !!standings.unlocked;
+    REVEAL = {
+      timeGatePassed: !!weekly.timeGatePassed,
+      votingComplete: !!weekly.votingComplete,
+      revealOverride: !!weekly.revealOverride,
+      revealed: !!weekly.revealed
+    };
     ALL_DATA = { weekly, allTime, teams, standings };
     renderWeekly(weekly, teams, allTime);
     renderAllTime(allTime);
@@ -468,15 +514,17 @@ function initDashboard() {
 }
 
 // Auto-init only if already unlocked this session
-if (sessionStorage.getItem("ba_pin") === "ok") {
-  initDashboard();
-}
+// Dashboard is public - init on load
+initDashboard();
 
 function renderWeekly(d, teamsData, allTime){
   if (!d) return;
-  document.getElementById("wkLabel").textContent = d.weekKey || "—";
-  const unlocked = isResultsUnlocked();
-  const matchDone = d.matchResult && d.matchResult !== "Unknown";
+  const phase = weekPhase();
+  const unlocked = phase === "revealed";
+  // Mon-Fri the last match is history (see All Time), so This Week looks ahead
+  // to next Saturday regardless of whether a result is on file.
+  const matchDone = phase !== "upcoming" && d.matchResult && d.matchResult !== "Unknown";
+  document.getElementById("wkLabel").textContent = phase === "upcoming" ? "Upcoming" : (d.weekKey || "—");
   const top = d.players && d.players[0];
   const avgRating = d.players && d.players.length ? (d.players.reduce((s,p)=>s+p.avg,0)/d.players.length) : null;
 
@@ -484,11 +532,15 @@ function renderWeekly(d, teamsData, allTime){
     ? `<div class="sc"><div class="sc-label">Votes Cast</div><div class="sc-val">${d.totalVoters}/${d.expectedVoters}</div><div class="sc-sub">${d.expectedVoters?Math.round(d.totalVoters/d.expectedVoters*100):0}% done</div></div>`
     : `<div class="sc"><div class="sc-label">Votes Cast</div><div class="sc-val" style="font-size:15px">Not open</div><div class="sc-sub">match yet to be played</div></div>`;
 
+  const lockSub = phase === "upcoming" ? "next match Saturday"
+                : phase === "waiting"  ? "waiting on all votes"
+                : "unlocks when all vote";
+
   document.getElementById("wStats").innerHTML = `
     ${votesCastCard}
-    <div class="sc"><div class="sc-label">Avg Rating</div><div class="sc-val">${unlocked?(avgRating?avgRating.toFixed(1):"—"):"🔒"}</div><div class="sc-sub">${unlocked?"squad average":"unlocks Sunday 8am"}</div></div>
-    <div class="sc"><div class="sc-label">MVP This Week</div><div class="sc-val" style="font-size:${unlocked?"15px":"26px"}">${unlocked?(top?top.name:"—"):"🔒"}</div><div class="sc-sub">${unlocked?(top?starsHtml(top.avg):"no data"):"unlocks Sunday 8am"}</div></div>
-    <div class="sc gold"><div class="sc-label">Top Rating</div><div class="sc-val">${unlocked?(top?top.avg.toFixed(1):"—"):"🔒"}</div><div class="sc-sub">${unlocked?(top?top.name+" leads":"no votes yet"):"unlocks Sunday 8am"}</div></div>`;
+    <div class="sc"><div class="sc-label">Avg Rating</div><div class="sc-val">${unlocked?(avgRating?avgRating.toFixed(1):"—"):"🔒"}</div><div class="sc-sub">${unlocked?"squad average":lockSub}</div></div>
+    <div class="sc"><div class="sc-label">MVP This Week</div><div class="sc-val" style="font-size:${unlocked?"15px":"26px"}">${unlocked?(top?top.name:"—"):"🔒"}</div><div class="sc-sub">${unlocked?(top?starsHtml(top.avg):"no data"):lockSub}</div></div>
+    <div class="sc gold"><div class="sc-label">Top Rating</div><div class="sc-val">${unlocked?(top?top.avg.toFixed(1):"—"):"🔒"}</div><div class="sc-sub">${unlocked?(top?top.name+" leads":"no votes yet"):lockSub}</div></div>`;
 
   if (unlocked && d.players && d.players.length) {
     const top3 = d.players.slice(0,3);
@@ -524,6 +576,10 @@ function renderWeekly(d, teamsData, allTime){
       </div>`;
     }).join("");
     document.getElementById("wLb").innerHTML = podHtml + lbHtml;
+  } else if (phase === "waiting") {
+    document.getElementById("wLb").innerHTML = renderWaiting(d);
+  } else if (phase === "upcoming") {
+    document.getElementById("wLb").innerHTML = renderUpcoming();
   } else if (!unlocked) {
     document.getElementById("wLb").innerHTML = renderCountdown();
     startCountdownTick();
@@ -547,10 +603,10 @@ function renderWeekly(d, teamsData, allTime){
     document.getElementById("vtBadge").textContent = "UPCOMING";
     document.getElementById("vtBadge").className = "pbadge gold";
   }
-  renderAnalytics(d, teamsData, allTime, unlocked);
+  renderAnalytics(d, teamsData, allTime, unlocked, phase);
 }
 
-function renderAnalytics(weekly, teamsData, allTime, unlocked){
+function renderAnalytics(weekly, teamsData, allTime, unlocked, phase){
   const players = allTime && allTime.players ? allTime.players : [];
   const mostImproved = [...players].filter(p=>p.delta>0).sort((a,b)=>b.delta-a.delta)[0];
   const mostDeclined = [...players].filter(p=>p.delta<0).sort((a,b)=>a.delta-b.delta)[0];
@@ -592,7 +648,9 @@ function renderAnalytics(weekly, teamsData, allTime, unlocked){
   }
   document.getElementById("apanel-form").innerHTML = formHtml;
 
-  if (teamsData && teamsData.teams && weekly.players && weekly.players.length) {
+  if (phase === "upcoming") {
+    document.getElementById("apanel-teams").innerHTML = `<div style="text-align:center;padding:22px 8px;font-family:var(--mono);font-size:11px;color:var(--muted)">⚽ Teams drop on Saturday</div>`;
+  } else if (teamsData && teamsData.teams && weekly.players && weekly.players.length) {
     const teamA = Array.isArray(teamsData.teams.teamA) ? teamsData.teams.teamA : teamsData.teams.teamA.split(",").map(n=>n.trim());
     const teamB = Array.isArray(teamsData.teams.teamB) ? teamsData.teams.teamB : teamsData.teams.teamB.split(",").map(n=>n.trim());
     const getAvg = (team) => {
