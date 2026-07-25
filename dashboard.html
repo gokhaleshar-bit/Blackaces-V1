@@ -651,6 +651,7 @@ return `<div class="locked-panel">
 <div class="cd-block"><div class="cd-val" id="cd-s">${String(secs).padStart(2,"0")}</div><div class="cd-label">Secs</div></div>
 </div>
 <div class="locked-sub">Everyone must vote to unlock 👆</div>
+<button class="force-reveal" id="forceRevealBtn" onclick="openRevealModal()">Developer mode</button>
 </div>`;
 }
 function renderWaiting(d) {
@@ -663,7 +664,7 @@ return `<div class="locked-panel">
 <div class="waiting-sub">Results unlock the moment everyone has voted</div>
 <div class="pending-wrap">${chips}</div>
 <div class="locked-sub">${d.totalVoters}/${d.expectedVoters} in · chase them up 👊</div>
-<button class="force-reveal" id="forceRevealBtn" onclick="openRevealModal()">Force reveal</button>
+<button class="force-reveal" id="forceRevealBtn" onclick="openRevealModal()">Developer mode</button>
 </div>`;
 }
 function renderUpcoming() {
