@@ -436,32 +436,10 @@ main{padding-top:20px;}
 
 
 
-/* ── PIN GATE ── */
-#pin-gate{position:fixed;inset:0;z-index:99999;background:#020408;display:flex;align-items:center;justify-content:center;transition:opacity .35s;}
-#pin-gate.gone{opacity:0;pointer-events:none;}
-#pin-card{background:#080d14;border:1px solid #243550;border-radius:18px;padding:44px 40px 36px;text-align:center;min-width:300px;box-shadow:0 0 80px rgba(0,0,0,.7);}
-#pin-input{width:100%;padding:14px;border-radius:10px;border:1.5px solid #243550;background:#0d1520;color:#00ff88;font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:700;letter-spacing:.5em;text-align:center;outline:none;margin-bottom:8px;transition:border-color .18s;}
-#pin-input:focus{border-color:#00ff88;box-shadow:0 0 0 3px rgba(0,255,136,.1);}
-#pin-input.shake{animation:pshake .35s ease;}
-#pin-err{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#ff3d5a;min-height:16px;margin-bottom:4px;}
-#pin-btn{width:100%;padding:13px;border-radius:10px;background:rgba(0,255,136,.1);border:1px solid #00ff88;color:#00ff88;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:12px;transition:background .18s;}
-#pin-btn:hover{background:rgba(0,255,136,.2);}
-#dashboardWrap{visibility:hidden;}
-@keyframes pshake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
-/* ── END PIN GATE ── */
 </style>
 </head>
 <body>
-<div id="pin-gate">
-  <div id="pin-card">
-    <div style="font-size:32px;margin-bottom:16px;">🔒</div>
-    <div style="font-family:'Fraunces',serif;font-size:21px;font-weight:700;color:#ffd166;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;">Black Aces FC</div>
-    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4a6080;margin-bottom:28px;">Enter PIN to access the dashboard</div>
-    <input id="pin-input" type="password" inputmode="numeric" maxlength="4" placeholder="····" autocomplete="off" autofocus/>
-    <div id="pin-err"></div>
-    <button id="pin-btn">Unlock</button>
-  </div>
-</div>  
+
 <div id="dashboardWrap">
 <div class="hero">
 <div class="hero-inner">
@@ -766,7 +744,7 @@ revealed: !!weekly.revealed
 };
 ALL_DATA = { weekly, allTime, teams, standings };
 renderWeekly(weekly, teams, allTime);
-renderAllTime(allTime);
+renderAllTime(allTime, !isResultsUnlocked());
 renderStandings(standings);
 buildPlayerSelectGrid();
 } catch(e) {
@@ -940,7 +918,7 @@ document.getElementById("apanel-teams").innerHTML = `
 document.getElementById("apanel-teams").innerHTML = `<div style="color:var(--muted);font-size:11px;font-family:var(--mono);padding:8px 0">Paste teams in Telegram first</div>`;
 }
 }
-function renderAllTime(d){
+function renderAllTime(d, weekLocked){
 if (!d || !d.players || !d.players.length) return;
 const top = d.players[0];
 const totalGames = d.recentGames ? d.recentGames.length : 0;
@@ -970,6 +948,16 @@ podHtml += `<div class="pod ${podClasses[i]}">
 </div>`;
 });
 podHtml += `</div>`;
+// Show banner if this week's votes not yet counted
+const existingBanner = document.getElementById("atWeekBanner");
+if (existingBanner) existingBanner.remove();
+if (weekLocked) {
+  const banner = document.createElement("div");
+  banner.id = "atWeekBanner";
+  banner.style.cssText = "margin:0 0 12px;padding:8px 14px;background:rgba(255,209,102,.08);border:1px solid rgba(255,209,102,.25);border-radius:8px;font-family:var(--mono);font-size:10px;color:var(--gold);letter-spacing:.04em;";
+  banner.textContent = "⏳ This week's results are pending — standings reflect all prior weeks";
+  document.getElementById("atseg-leaderboard").prepend(banner);
+}
 document.getElementById("atPodium").innerHTML = podHtml;
 document.getElementById("atLb").innerHTML = rest.map(p => {
 const bg = avatarColor(p.name);
@@ -1139,42 +1127,5 @@ maxlength="6" placeholder="PIN" onkeyup="revealKey(event)"/>
 </div>
 </div>
 
-<script>
-(function(){
-  var PIN='9630';
-  var KEY='ba_pin_unlocked';
-  function unlock(){
-    var gate=document.getElementById('pin-gate');
-    var wrap=document.getElementById('dashboardWrap');
-    gate.classList.add('gone');
-    wrap.style.visibility='visible';
-    sessionStorage.setItem(KEY,'1');
-    setTimeout(function(){gate.style.display='none';},400);
-  }
-  if(sessionStorage.getItem(KEY)==='1'){
-    document.getElementById('pin-gate').style.display='none';
-    document.getElementById('dashboardWrap').style.visibility='visible';
-    return;
-  }
-  function attempt(){
-    var v=document.getElementById('pin-input').value;
-    if(v===PIN){
-      unlock();
-    } else {
-      var i=document.getElementById('pin-input');
-      var e=document.getElementById('pin-err');
-      e.textContent='Incorrect PIN — try again';
-      i.classList.remove('shake');
-      void i.offsetWidth;
-      i.classList.add('shake');
-      i.value='';
-      i.focus();
-      setTimeout(function(){e.textContent='';},2200);
-    }
-  }
-  document.getElementById('pin-btn').addEventListener('click',attempt);
-  document.getElementById('pin-input').addEventListener('keydown',function(e){if(e.key==='Enter')attempt();});
-})();
-</script>
 </body>
 </html>
