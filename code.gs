@@ -195,7 +195,6 @@ function recordMatchResult(text) {
   } catch(e) { Logger.log("recordMatchResult error: "+e); return null; }
 }
 
-// FIX: Strip markdown fences from Claude response + explicit no-markdown prompt
 function parseTeams(text) {
   try {
     const res = UrlFetchApp.fetch("https://api.anthropic.com/v1/messages", {
@@ -220,7 +219,6 @@ function parseTeams(text) {
     const json = JSON.parse(res.getContentText());
     if (!json.content || !json.content[0]) return null;
     let raw = json.content[0].text.trim();
-    // Strip markdown code fences if Claude includes them anyway
     raw = raw.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/i, "").trim();
     return JSON.parse(raw);
   } catch(e) {
@@ -287,7 +285,6 @@ function logAudit(weekKey, event, detail) {
 
 function doOptions(e) { return ContentService.createTextOutput("").setMimeType(ContentService.MimeType.JSON); }
 
-// FIX: removed spurious semicolon in e.parameter; && e.parameter.action
 function doGet(e) {
   const action = e && e.parameter && e.parameter.action;
   let data = {};
@@ -310,7 +307,7 @@ function buildStandings() {
   const teamsData = teamsSh.getDataRange().getValues().slice(1);
   const weeksOfData = teamsData.length;
 
-  // Unlocked if current week has a result recorded (result col index 6, not empty/Unknown)
+  // Unlocked if current week has a result recorded
   const wk = getWeekKey();
   const thisWeekRow = teamsData.filter(r => r[0] === wk);
   const resultRecorded = thisWeekRow.length > 0 && thisWeekRow[thisWeekRow.length-1][6] &&
@@ -321,7 +318,6 @@ function buildStandings() {
     return { unlocked: false, weeksOfData, revealWeeks: REVEAL_WEEKS, minGames: MIN_GAMES, standings: [] };
   }
 
-  // Build win/loss/draw per player from Teams sheet
   const playerWL = {};
   teamsData.forEach(r => {
     const result = r[6]; if (!result || result === "Unknown") return;
@@ -386,6 +382,25 @@ function buildAllTime() {
   const data = sh.getDataRange().getValues().slice(1);
   const teamsSh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Teams");
   const teamsData = teamsSh ? teamsSh.getDataRange().getValues().slice(1) : [];
+
+  // Build sorted list of all unique week keys from Teams sheet
+  const allWeekKeys = [...new Set(teamsData.map(r => r[0]))].sort();
+  const totalWeeks = allWeekKeys.length;
+
+  // Build per-player first appearance week and games played from Teams sheet
+  const playerFirstWeek = {};  // name -> earliest weekKey they appeared
+  const playerGamesPlayed = {}; // name -> count of weeks they appeared in Teams
+  teamsData.forEach(r => {
+    const wk = r[0];
+    const teamA = typeof r[3] === "string" ? r[3].split(",").map(n => n.trim()).filter(Boolean) : [];
+    const teamB = typeof r[5] === "string" ? r[5].split(",").map(n => n.trim()).filter(Boolean) : [];
+    [...teamA, ...teamB].forEach(name => {
+      if (!playerFirstWeek[name] || wk < playerFirstWeek[name]) playerFirstWeek[name] = wk;
+      if (!playerGamesPlayed[name]) playerGamesPlayed[name] = 0;
+      playerGamesPlayed[name]++;
+    });
+  });
+
   const playerMap = {}, weekMap = {};
   data.forEach(r => {
     const wk = r[0], p = r[3], rating = Number(r[4]);
@@ -396,6 +411,7 @@ function buildAllTime() {
     if (!weekMap[wk]) weekMap[wk] = {weekKey: wk, result: r[5], voters: {}, scoreA: "", scoreB: "", teamA: [], teamB: [], teamAName: "", teamBName: ""};
     weekMap[wk].voters[r[2]] = true;
   });
+
   teamsData.forEach(r => {
     const wk = r[0];
     if (!weekMap[wk]) weekMap[wk] = {weekKey: wk, result: r[6], voters: {}, scoreA: "", scoreB: "", teamA: [], teamB: [], teamAName: "", teamBName: ""};
@@ -405,6 +421,7 @@ function buildAllTime() {
     weekMap[wk].teamA = typeof r[3] === "string" ? r[3].split(",").map(n => n.trim()) : [];
     weekMap[wk].teamB = typeof r[5] === "string" ? r[5].split(",").map(n => n.trim()) : [];
   });
+
   const playerWinLoss = {};
   Object.values(weekMap).forEach(wk => {
     if (!wk.result || wk.result === "Unknown") return;
@@ -421,8 +438,26 @@ function buildAllTime() {
     else if (wk.result === "Loss") { processTeam(wk.teamA, false); processTeam(wk.teamB, true); }
     else { processTeam(wk.teamA, false); processTeam(wk.teamB, false); }
   });
+
+  // Attendance boost constants
+  const MAX_BOOST = 0.20;
+  const BOOST_THRESHOLD = 0.30; // 30% attendance minimum to appear; baseline for boost
+  const PENALTY = -0.10;        // applied if below 30% (excluded from dashboard so not used, kept for reference)
+
+  // Calculate attendance % for each player based on weeks since first appearance
+  const playerAttendance = {};
+  Object.keys(playerFirstWeek).forEach(name => {
+    const firstWk = playerFirstWeek[name];
+    const weeksEligible = allWeekKeys.filter(wk => wk >= firstWk).length;
+    const gamesPlayed = playerGamesPlayed[name] || 0;
+    playerAttendance[name] = weeksEligible > 0 ? gamesPlayed / weeksEligible : 0;
+  });
+
+  // Max attendance across all players (for relative scaling)
+  const maxAttendance = Math.max(...Object.values(playerAttendance), 0);
+
   const players = Object.values(playerMap).map(p => {
-    const avg = p.count ? +(p.total/p.count).toFixed(2) : 0;
+    const rawAvg = p.count ? +(p.total/p.count).toFixed(2) : 0;
     const weekKeys = Object.keys(p.weeks).sort();
     const lastTwo = weekKeys.slice(-2);
     let delta = 0;
@@ -432,15 +467,30 @@ function buildAllTime() {
       delta = +(curr - prev).toFixed(2);
     }
     const wl = playerWinLoss[p.name] || {wins: 0, losses: 0, draws: 0, played: 0};
+
+    // Attendance boost calculation
+    const attendance = playerAttendance[p.name] || 0;
+
+    // Exclude players below 30% attendance
+    if (attendance < BOOST_THRESHOLD) return null;
+
+    // Linear boost from 0 (at 30%) to MAX_BOOST (at 100%)
+    const boostRatio = (attendance - BOOST_THRESHOLD) / (1 - BOOST_THRESHOLD);
+    const boost = +(boostRatio * MAX_BOOST).toFixed(3);
+    const avg = +Math.min(5.0, rawAvg + boost).toFixed(2);
+
     return {
-      name: p.name, avg, count: p.count, gamesPlayed: weekKeys.length, delta,
+      name: p.name, avg, rawAvg, boost, attendance: +attendance.toFixed(2),
+      count: p.count, gamesPlayed: weekKeys.length, delta,
       wins: wl.wins, losses: wl.losses, draws: wl.draws, played: wl.played,
       winRate: wl.played ? +(wl.wins / wl.played * 100).toFixed(0) : 0
     };
-  }).sort((a,b) => b.avg - a.avg);
+  }).filter(p => p !== null).sort((a,b) => b.avg - a.avg);
+
   const recentGames = Object.values(weekMap)
     .sort((a,b) => b.weekKey.localeCompare(a.weekKey)).slice(0, 10)
     .map(w => ({weekKey: w.weekKey, result: w.result, voters: Object.keys(w.voters).length, scoreA: w.scoreA, scoreB: w.scoreB, teamAName: w.teamAName, teamBName: w.teamBName}));
+
   const anchor = players.filter(p => p.played >= 3).sort((a,b) => b.winRate - a.winRate)[0] || null;
   return {players, recentGames, anchor};
 }
@@ -468,7 +518,6 @@ function buildPlayerData(playerName) {
     if (!inA && !inB) return;
     wlRecord.played++;
     if (result === "Draw") { wlRecord.draws++; return; }
-    // FIX: removed spurious semicolons in (inA;) and (inB;)
     if ((result === "Win" && inA) || (result === "Loss" && inB)) wlRecord.wins++;
     else wlRecord.losses++;
   });
