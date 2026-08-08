@@ -1,0 +1,539 @@
+const CONFIG = {
+  TELEGRAM_BOT_TOKEN: "8404055335:AAF67KIEDFVkelxk81RPQKEj274r6sMZ2ho",
+  TELEGRAM_GROUP_ID: "-1003689144162",
+  CUSTODIAN_TELEGRAM_ID: "6009593486",
+  VOTING_APP_URL: "https://sage-puppy-1778fd.netlify.app/voting.html",
+  DASHBOARD_URL: "https://sage-puppy-1778fd.netlify.app/dashboard.html",
+  ANTHROPIC_API_KEY: "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",
+};
+
+function getPlayers() {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Players");
+  if (!sh) return [];
+  return sh.getDataRange().getValues().slice(1)
+    .filter(r => r[2] === true || r[2] === "TRUE")
+    .map(r => ({ name: r[0], pos: r[1] }));
+}
+
+function getPlayerNames() { return getPlayers().map(p => p.name); }
+
+function addPlayer(name, pos) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName("Players");
+  if (!sh) {
+    sh = ss.insertSheet("Players");
+    sh.getRange(1,1,1,3).setValues([["Name","Position","Active"]]);
+    sh.setFrozenRows(1);
+  }
+  const data = sh.getDataRange().getValues().slice(1);
+  if (data.find(r => r[0].toLowerCase() === name.toLowerCase())) return false;
+  sh.appendRow([name, pos.toUpperCase(), true]);
+  return true;
+}
+
+function setupSheets() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheets = {
+    Players: ["Name","Position","Active"],
+    Votes: ["WeekKey","Date","Voter","RatedPlayer","Rating","MatchResult","Timestamp"],
+    Teams: ["WeekKey","Date","TeamAName","TeamA","TeamBName","TeamB","Result","ScoreA","ScoreB","ParsedBy","Timestamp"],
+    AuditLog: ["WeekKey","Timestamp","Event","Detail"],
+    WeeklySummary: ["WeekKey","TotalVoters","AvgRating","MVP","Timestamp"]
+  };
+  Object.entries(sheets).forEach(([name, headers]) => {
+    let sh = ss.getSheetByName(name);
+    if (!sh) sh = ss.insertSheet(name);
+    sh.getRange(1,1,1,headers.length).setValues([headers]).setFontWeight("bold");
+    sh.setFrozenRows(1);
+  });
+}
+
+function getWeekKey() {
+  const now = new Date();
+  const jan1 = new Date(now.getFullYear(), 0, 1);
+  const week = Math.ceil(((now - jan1) / 86400000 + jan1.getDay() + 1) / 7);
+  return now.getFullYear() + "_w" + week;
+}
+
+function hasAlreadyVoted(voter, weekKey) {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Votes");
+  return sh.getDataRange().getValues().slice(1).some(r => r[0] === weekKey && r[2] === voter);
+}
+
+function sendTelegram(chatId, text) {
+  UrlFetchApp.fetch("https://api.telegram.org/bot" + CONFIG.TELEGRAM_BOT_TOKEN + "/sendMessage", {
+    method: "post", contentType: "application/json",
+    payload: JSON.stringify({ chat_id: chatId, text }),
+    muteHttpExceptions: true
+  });
+}
+
+function sendToGroup(text) { sendTelegram(CONFIG.TELEGRAM_GROUP_ID, text); }
+function sendToCustodian(text) { sendTelegram(CONFIG.CUSTODIAN_TELEGRAM_ID, text); }
+
+function setupWebhook() {
+  const res = UrlFetchApp.fetch(
+    "https://api.telegram.org/bot" + CONFIG.TELEGRAM_BOT_TOKEN + "/setWebhook", {
+      method: "post", contentType: "application/json",
+      payload: JSON.stringify({ url: ScriptApp.getService().getUrl() }),
+      muteHttpExceptions: true
+    });
+  Logger.log("Webhook: " + res.getContentText());
+}
+
+function getPendingVoters(weekKey) {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Votes");
+  const voted = {};
+  sh.getDataRange().getValues().slice(1).filter(r => r[0] === weekKey).forEach(r => voted[r[2]] = true);
+  const thisWeekPlayers = getThisWeekPlayerNames();
+  const allPlayers = thisWeekPlayers.length ? thisWeekPlayers : getPlayerNames();
+  return allPlayers.filter(p => !voted[p]);
+}
+
+function getThisWeekPlayerNames() {
+  const teams = getThisWeekTeams();
+  if (!teams.teams) return [];
+  const teamA = Array.isArray(teams.teams.teamA) ? teams.teams.teamA : teams.teams.teamA.split(",").map(n => n.trim());
+  const teamB = Array.isArray(teams.teams.teamB) ? teams.teams.teamB : teams.teams.teamB.split(",").map(n => n.trim());
+  const registered = getPlayerNames();
+  return [...new Set([...teamA,...teamB])].filter(n => registered.includes(n));
+}
+
+function doPost(e) {
+  try {
+    const body = JSON.parse(e.postData.contents);
+    if (body.message) {
+      handleTelegramMessage(body.message);
+      return ContentService.createTextOutput(JSON.stringify({ok:true})).setMimeType(ContentService.MimeType.JSON);
+    }
+    if (body.voter && body.ratings) {
+      if (hasAlreadyVoted(body.voter, body.weekKey)) {
+        return ContentService.createTextOutput(JSON.stringify({
+          success: false, error: "already_voted", message: body.voter + " has already voted."
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
+      recordVotes(body);
+      return ContentService.createTextOutput(JSON.stringify({success:true})).setMimeType(ContentService.MimeType.JSON);
+    }
+  } catch(err) { Logger.log("doPost error: " + err); }
+  return ContentService.createTextOutput(JSON.stringify({ok:true})).setMimeType(ContentService.MimeType.JSON);
+}
+
+function recordVotes(payload) {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Votes");
+  const ts = new Date().toISOString();
+  Object.entries(payload.ratings).forEach(([player, rating]) => {
+    sh.appendRow([payload.weekKey, payload.date, payload.voter, player, rating, payload.matchResult, ts]);
+  });
+  logAudit(payload.weekKey, "VoteReceived", payload.voter + " rated " + Object.keys(payload.ratings).join(", "));
+  detectBias(payload.weekKey);
+}
+
+function handleTelegramMessage(msg) {
+  const text = (msg.text || "").trim();
+  const chatId = msg.chat.id;
+  const lower = text.toLowerCase();
+
+  if (text.startsWith("/addplayer")) {
+    const parts = text.split(" ");
+    if (parts.length < 3) { sendTelegram(chatId, "Usage: /addplayer Name POS"); return; }
+    const added = addPlayer(parts[1], parts[2]);
+    sendTelegram(chatId, added ? parts[1]+" added!" : parts[1]+" already exists.");
+    return;
+  }
+  if (text === "/listplayers") {
+    const players = getPlayers();
+    sendTelegram(chatId, "Squad ("+players.length+")\n\n"+players.map((p,i) => (i+1)+". "+p.name+" - "+p.pos).join("\n"));
+    return;
+  }
+  if (text === "/status") {
+    const wk = getWeekKey();
+    sendTelegram(chatId, "Status - "+wk+"\nPending: "+getPendingVoters(wk).length+"\nFlags: "+getFlaggedCount(wk));
+    return;
+  }
+  if (text === "/dashboard") { sendTelegram(chatId, "Dashboard:\n"+CONFIG.DASHBOARD_URL); return; }
+  if (text === "/vote") { sendTelegram(chatId, "Vote here:\n"+CONFIG.VOTING_APP_URL); return; }
+
+  const resultKeywords = ["won","win","lost","loss","draw","drew"];
+  if (resultKeywords.some(k => lower.includes(k)) && text.split("\n").length <= 3 && !text.startsWith("/")) {
+    const result = recordMatchResult(text);
+    if (result) sendToGroup("Result recorded: " + result);
+    return;
+  }
+
+  if (!text.startsWith("/") && (text.includes(":") || text.split("\n").length > 3)) {
+    const parsed = parseTeams(text);
+    if (parsed) {
+      recordTeams(parsed);
+      const a = Array.isArray(parsed.teamA) ? parsed.teamA.join(", ") : parsed.teamA;
+      const b = Array.isArray(parsed.teamB) ? parsed.teamB.join(", ") : parsed.teamB;
+      sendToGroup("Teams recorded!\n"+(parsed.teamAName||"Team A")+": "+a+"\n"+(parsed.teamBName||"Team B")+": "+b);
+    }
+  }
+}
+
+function recordMatchResult(text) {
+  try {
+    const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Teams");
+    const data = sh.getDataRange().getValues();
+    const wk = getWeekKey();
+    const lower = text.toLowerCase();
+    let result = lower.includes("won") || lower.includes("win") ? "Win" :
+                 lower.includes("lost") || lower.includes("loss") ? "Loss" : "Draw";
+    const scoreMatch = text.match(/(\d+)\s*[-:]\s*(\d+)/);
+    const scoreA = scoreMatch ? scoreMatch[1] : "";
+    const scoreB = scoreMatch ? scoreMatch[2] : "";
+    for (let i = data.length-1; i >= 1; i--) {
+      if (data[i][0] === wk) {
+        sh.getRange(i+1, 7).setValue(result);
+        if (scoreA) { sh.getRange(i+1, 8).setValue(scoreA); sh.getRange(i+1, 9).setValue(scoreB); }
+        logAudit(wk, "ResultRecorded", text);
+        return result + (scoreA ? " ("+scoreA+"-"+scoreB+")" : "");
+      }
+    }
+    return null;
+  } catch(e) { Logger.log("recordMatchResult error: "+e); return null; }
+}
+
+function parseTeams(text) {
+  try {
+    const res = UrlFetchApp.fetch("https://api.anthropic.com/v1/messages", {
+      method: "post",
+      headers: {
+        "x-api-key": CONFIG.ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json"
+      },
+      payload: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 300,
+        messages: [{
+          role: "user",
+          content: "Extract two teams. Ignore +1 guests. Only include registered players: "
+            + getPlayerNames().join(",")
+            + ". Reply ONLY with raw JSON (no markdown, no backticks, no explanation): {\"teamAName\":\"...\",\"teamA\":[...],\"teamBName\":\"...\",\"teamB\":[...],\"result\":\"\"}. Message: " + text
+        }]
+      }),
+      muteHttpExceptions: true
+    });
+    const json = JSON.parse(res.getContentText());
+    if (!json.content || !json.content[0]) return null;
+    let raw = json.content[0].text.trim();
+    raw = raw.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/i, "").trim();
+    return JSON.parse(raw);
+  } catch(e) {
+    Logger.log("parseTeams error: " + e);
+    return null;
+  }
+}
+
+function recordTeams(parsed) {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Teams");
+  sh.appendRow([
+    getWeekKey(), new Date().toISOString().split("T")[0],
+    parsed.teamAName || "Team A", Array.isArray(parsed.teamA) ? parsed.teamA.join(", ") : parsed.teamA,
+    parsed.teamBName || "Team B", Array.isArray(parsed.teamB) ? parsed.teamB.join(", ") : parsed.teamB,
+    parsed.result || "", "", "", "Claude", new Date().toISOString()
+  ]);
+}
+
+function getThisWeekTeams() {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Teams");
+  if (!sh) return {teams: null};
+  const data = sh.getDataRange().getValues().slice(1);
+  const wk = getWeekKey();
+  const rows = data.filter(r => r[0] === wk);
+  if (!rows.length) return {teams: null};
+  const row = rows[rows.length-1];
+  return {
+    teams: {
+      teamAName: row[2],
+      teamA: typeof row[3] === "string" ? row[3].split(",").map(n => n.trim()) : row[3],
+      teamBName: row[4],
+      teamB: typeof row[5] === "string" ? row[5].split(",").map(n => n.trim()) : row[5],
+      result: row[6], scoreA: row[7] || "", scoreB: row[8] || ""
+    }
+  };
+}
+
+function detectBias(weekKey) {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Votes");
+  const voterMap = {};
+  sh.getDataRange().getValues().slice(1).filter(r => r[0] === weekKey).forEach(r => {
+    if (!voterMap[r[2]]) voterMap[r[2]] = [];
+    voterMap[r[2]].push(Number(r[4]));
+  });
+  const flags = [];
+  Object.entries(voterMap).forEach(([voter, ratings]) => {
+    const avg = ratings.reduce((a,b) => a+b, 0) / ratings.length;
+    if (avg >= 4.8) flags.push(voter + " avg " + avg.toFixed(1) + " - inflation");
+    if (avg <= 1.5) flags.push(voter + " avg " + avg.toFixed(1) + " - deflation");
+  });
+  if (flags.length > 0) { logAudit(weekKey, "BiasFlag", flags.join("; ")); sendToCustodian("Bias flags:\n" + flags.join("\n")); }
+}
+
+function getFlaggedCount(weekKey) {
+  return SpreadsheetApp.getActiveSpreadsheet().getSheetByName("AuditLog")
+    .getDataRange().getValues().slice(1)
+    .filter(r => r[0] === weekKey && r[2] === "BiasFlag").length;
+}
+
+function logAudit(weekKey, event, detail) {
+  SpreadsheetApp.getActiveSpreadsheet().getSheetByName("AuditLog")
+    .appendRow([weekKey, new Date().toISOString(), event, detail]);
+}
+
+function doOptions(e) { return ContentService.createTextOutput("").setMimeType(ContentService.MimeType.JSON); }
+
+function doGet(e) {
+  const action = e && e.parameter && e.parameter.action;
+  let data = {};
+  if (action === "alltime") data = buildAllTime();
+  else if (action === "players") data = {players: getPlayers()};
+  else if (action === "teams") data = getThisWeekTeams();
+  else if (action === "playerdata") data = buildPlayerData(e.parameter.name);
+  else if (action === "standings") data = buildStandings();
+  else data = buildWeekly(getWeekKey());
+  return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
+}
+
+// Special One standings — unlocks as soon as this week's result is recorded
+function buildStandings() {
+  const MIN_GAMES = 3;
+  const REVEAL_WEEKS = 5;
+  const teamsSh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Teams");
+  if (!teamsSh) return { unlocked: false, weeksOfData: 0, revealWeeks: REVEAL_WEEKS, minGames: MIN_GAMES, standings: [] };
+
+  const teamsData = teamsSh.getDataRange().getValues().slice(1);
+  const weeksOfData = teamsData.length;
+
+  // Unlocked if current week has a result recorded
+  const wk = getWeekKey();
+  const thisWeekRow = teamsData.filter(r => r[0] === wk);
+  const resultRecorded = thisWeekRow.length > 0 && thisWeekRow[thisWeekRow.length-1][6] &&
+                         thisWeekRow[thisWeekRow.length-1][6] !== "" &&
+                         thisWeekRow[thisWeekRow.length-1][6] !== "Unknown";
+
+  if (!resultRecorded && weeksOfData < REVEAL_WEEKS) {
+    return { unlocked: false, weeksOfData, revealWeeks: REVEAL_WEEKS, minGames: MIN_GAMES, standings: [] };
+  }
+
+  const playerWL = {};
+  teamsData.forEach(r => {
+    const result = r[6]; if (!result || result === "Unknown") return;
+    const teamA = typeof r[3] === "string" ? r[3].split(",").map(n => n.trim()).filter(Boolean) : [];
+    const teamB = typeof r[5] === "string" ? r[5].split(",").map(n => n.trim()).filter(Boolean) : [];
+    const processTeam = (team, isWinner) => {
+      team.forEach(name => {
+        if (!playerWL[name]) playerWL[name] = { wins:0, losses:0, draws:0, played:0 };
+        playerWL[name].played++;
+        if (result === "Draw") playerWL[name].draws++;
+        else if (isWinner) playerWL[name].wins++;
+        else playerWL[name].losses++;
+      });
+    };
+    if (result === "Win")  { processTeam(teamA, true);  processTeam(teamB, false); }
+    else if (result === "Loss") { processTeam(teamA, false); processTeam(teamB, true); }
+    else { processTeam(teamA, false); processTeam(teamB, false); }
+  });
+
+  const players = getPlayers();
+  const standings = Object.entries(playerWL)
+    .filter(([, w]) => w.played >= MIN_GAMES)
+    .map(([name, w]) => {
+      const pos = (players.find(p => p.name === name) || {}).pos || "";
+      const points = w.wins * 3 + w.draws;
+      const winRate = w.played ? Math.round(w.wins / w.played * 100) : 0;
+      return { name, pos, wins: w.wins, draws: w.draws, losses: w.losses, played: w.played, points, winRate };
+    })
+    .sort((a, b) => b.points - a.points || b.winRate - a.winRate);
+
+  return { unlocked: true, weeksOfData, revealWeeks: REVEAL_WEEKS, minGames: MIN_GAMES, standings };
+}
+
+function buildWeekly(weekKey) {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Votes");
+  const data = sh.getDataRange().getValues().slice(1).filter(r => r[0] === weekKey);
+  const voterSet = {};
+  data.forEach(r => voterSet[r[2]] = true);
+  const playerMap = {};
+  data.forEach(r => {
+    if (!playerMap[r[3]]) playerMap[r[3]] = {name: r[3], total: 0, count: 0};
+    playerMap[r[3]].total += Number(r[4]); playerMap[r[3]].count++;
+  });
+  const players = Object.values(playerMap)
+    .map(p => ({name: p.name, avg: p.count ? +(p.total/p.count).toFixed(2) : 0, count: p.count}))
+    .sort((a,b) => b.avg - a.avg);
+  const thisWeekPlayers = getThisWeekPlayerNames();
+  const expectedPlayers = thisWeekPlayers.length ? thisWeekPlayers : getPlayerNames();
+  return {
+    weekKey,
+    totalVoters: Object.keys(voterSet).length,
+    expectedVoters: expectedPlayers.length,
+    pendingVoters: expectedPlayers.filter(p => !voterSet[p]),
+    matchResult: data.length ? data[0][5] : "Unknown",
+    players,
+    voters: Object.keys(voterSet)
+  };
+}
+
+function buildAllTime() {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Votes");
+  const data = sh.getDataRange().getValues().slice(1);
+  const teamsSh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Teams");
+  const teamsData = teamsSh ? teamsSh.getDataRange().getValues().slice(1) : [];
+
+  // Build sorted list of all unique week keys from Teams sheet
+  const allWeekKeys = [...new Set(teamsData.map(r => r[0]))].sort();
+  const totalWeeks = allWeekKeys.length;
+
+  // Build per-player first appearance week and games played from Teams sheet
+  const playerFirstWeek = {};  // name -> earliest weekKey they appeared
+  const playerGamesPlayed = {}; // name -> count of weeks they appeared in Teams
+  teamsData.forEach(r => {
+    const wk = r[0];
+    const teamA = typeof r[3] === "string" ? r[3].split(",").map(n => n.trim()).filter(Boolean) : [];
+    const teamB = typeof r[5] === "string" ? r[5].split(",").map(n => n.trim()).filter(Boolean) : [];
+    [...teamA, ...teamB].forEach(name => {
+      if (!playerFirstWeek[name] || wk < playerFirstWeek[name]) playerFirstWeek[name] = wk;
+      if (!playerGamesPlayed[name]) playerGamesPlayed[name] = 0;
+      playerGamesPlayed[name]++;
+    });
+  });
+
+  const playerMap = {}, weekMap = {};
+  data.forEach(r => {
+    const wk = r[0], p = r[3], rating = Number(r[4]);
+    if (!playerMap[p]) playerMap[p] = {name: p, total: 0, count: 0, weeks: {}};
+    playerMap[p].total += rating; playerMap[p].count++;
+    if (!playerMap[p].weeks[wk]) playerMap[p].weeks[wk] = [];
+    playerMap[p].weeks[wk].push(rating);
+    if (!weekMap[wk]) weekMap[wk] = {weekKey: wk, result: r[5], voters: {}, scoreA: "", scoreB: "", teamA: [], teamB: [], teamAName: "", teamBName: ""};
+    weekMap[wk].voters[r[2]] = true;
+  });
+
+  teamsData.forEach(r => {
+    const wk = r[0];
+    if (!weekMap[wk]) weekMap[wk] = {weekKey: wk, result: r[6], voters: {}, scoreA: "", scoreB: "", teamA: [], teamB: [], teamAName: "", teamBName: ""};
+    weekMap[wk].result = r[6] || weekMap[wk].result;
+    weekMap[wk].scoreA = r[7] || ""; weekMap[wk].scoreB = r[8] || "";
+    weekMap[wk].teamAName = r[2] || ""; weekMap[wk].teamBName = r[4] || "";
+    weekMap[wk].teamA = typeof r[3] === "string" ? r[3].split(",").map(n => n.trim()) : [];
+    weekMap[wk].teamB = typeof r[5] === "string" ? r[5].split(",").map(n => n.trim()) : [];
+  });
+
+  const playerWinLoss = {};
+  Object.values(weekMap).forEach(wk => {
+    if (!wk.result || wk.result === "Unknown") return;
+    const processTeam = (team, isWinner) => {
+      team.forEach(name => {
+        if (!playerWinLoss[name]) playerWinLoss[name] = {wins: 0, losses: 0, draws: 0, played: 0};
+        playerWinLoss[name].played++;
+        if (wk.result === "Draw") playerWinLoss[name].draws++;
+        else if (isWinner) playerWinLoss[name].wins++;
+        else playerWinLoss[name].losses++;
+      });
+    };
+    if (wk.result === "Win") { processTeam(wk.teamA, true); processTeam(wk.teamB, false); }
+    else if (wk.result === "Loss") { processTeam(wk.teamA, false); processTeam(wk.teamB, true); }
+    else { processTeam(wk.teamA, false); processTeam(wk.teamB, false); }
+  });
+
+  // Attendance boost constants
+  const MAX_BOOST = 0.20;
+  const BOOST_THRESHOLD = 0.30; // 30% attendance minimum to appear; baseline for boost
+  const PENALTY = -0.10;        // applied if below 30% (excluded from dashboard so not used, kept for reference)
+
+  // Calculate attendance % for each player based on weeks since first appearance
+  const playerAttendance = {};
+  Object.keys(playerFirstWeek).forEach(name => {
+    const firstWk = playerFirstWeek[name];
+    const weeksEligible = allWeekKeys.filter(wk => wk >= firstWk).length;
+    const gamesPlayed = playerGamesPlayed[name] || 0;
+    playerAttendance[name] = weeksEligible > 0 ? gamesPlayed / weeksEligible : 0;
+  });
+
+  // Max attendance across all players (for relative scaling)
+  const maxAttendance = Math.max(...Object.values(playerAttendance), 0);
+
+  const players = Object.values(playerMap).map(p => {
+    const rawAvg = p.count ? +(p.total/p.count).toFixed(2) : 0;
+    const weekKeys = Object.keys(p.weeks).sort();
+    const lastTwo = weekKeys.slice(-2);
+    let delta = 0;
+    if (lastTwo.length === 2) {
+      const prev = p.weeks[lastTwo[0]].reduce((a,b) => a+b, 0) / p.weeks[lastTwo[0]].length;
+      const curr = p.weeks[lastTwo[1]].reduce((a,b) => a+b, 0) / p.weeks[lastTwo[1]].length;
+      delta = +(curr - prev).toFixed(2);
+    }
+    const wl = playerWinLoss[p.name] || {wins: 0, losses: 0, draws: 0, played: 0};
+
+    // Attendance boost calculation
+    const attendance = playerAttendance[p.name] || 0;
+
+    // Exclude players below 30% attendance
+    if (attendance < BOOST_THRESHOLD) return null;
+
+    // Linear boost from 0 (at 30%) to MAX_BOOST (at 100%)
+    const boostRatio = (attendance - BOOST_THRESHOLD) / (1 - BOOST_THRESHOLD);
+    const boost = +(boostRatio * MAX_BOOST).toFixed(3);
+    const avg = +Math.min(5.0, rawAvg + boost).toFixed(2);
+
+    return {
+      name: p.name, avg, rawAvg, boost, attendance: +attendance.toFixed(2),
+      count: p.count, gamesPlayed: weekKeys.length, delta,
+      wins: wl.wins, losses: wl.losses, draws: wl.draws, played: wl.played,
+      winRate: wl.played ? +(wl.wins / wl.played * 100).toFixed(0) : 0
+    };
+  }).filter(p => p !== null).sort((a,b) => b.avg - a.avg);
+
+  const recentGames = Object.values(weekMap)
+    .sort((a,b) => b.weekKey.localeCompare(a.weekKey)).slice(0, 10)
+    .map(w => ({weekKey: w.weekKey, result: w.result, voters: Object.keys(w.voters).length, scoreA: w.scoreA, scoreB: w.scoreB, teamAName: w.teamAName, teamBName: w.teamBName}));
+
+  const anchor = players.filter(p => p.played >= 3).sort((a,b) => b.winRate - a.winRate)[0] || null;
+  return {players, recentGames, anchor};
+}
+
+function buildPlayerData(playerName) {
+  if (!playerName) return {error: "No player"};
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Votes");
+  const data = sh.getDataRange().getValues().slice(1);
+  const teamsSh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Teams");
+  const teamsData = teamsSh ? teamsSh.getDataRange().getValues().slice(1) : [];
+  const weeklyRatings = {};
+  data.filter(r => r[3] === playerName).forEach(r => {
+    if (!weeklyRatings[r[0]]) weeklyRatings[r[0]] = [];
+    weeklyRatings[r[0]].push(Number(r[4]));
+  });
+  const ratingHistory = Object.entries(weeklyRatings)
+    .sort((a,b) => a[0].localeCompare(b[0]))
+    .map(([wk, ratings]) => ({weekKey: wk, avg: +(ratings.reduce((a,b) => a+b, 0) / ratings.length).toFixed(2), count: ratings.length}));
+  const wlRecord = {wins: 0, losses: 0, draws: 0, played: 0};
+  teamsData.forEach(r => {
+    const result = r[6]; if (!result || result === "Unknown") return;
+    const teamA = typeof r[3] === "string" ? r[3].split(",").map(n => n.trim()) : [];
+    const teamB = typeof r[5] === "string" ? r[5].split(",").map(n => n.trim()) : [];
+    const inA = teamA.includes(playerName), inB = teamB.includes(playerName);
+    if (!inA && !inB) return;
+    wlRecord.played++;
+    if (result === "Draw") { wlRecord.draws++; return; }
+    if ((result === "Win" && inA) || (result === "Loss" && inB)) wlRecord.wins++;
+    else wlRecord.losses++;
+  });
+  const allRatings = data.filter(r => r[3] === playerName).map(r => Number(r[4]));
+  const avg = allRatings.length ? +(allRatings.reduce((a,b) => a+b, 0) / allRatings.length).toFixed(2) : 0;
+  const best = ratingHistory.length ? Math.max(...ratingHistory.map(r => r.avg)) : 0;
+  const consistency = allRatings.length > 1
+    ? +(Math.sqrt(allRatings.map(r => (r-avg)**2).reduce((a,b) => a+b, 0) / allRatings.length)).toFixed(2) : 0;
+  return {name: playerName, avg, best, consistency, ratingHistory, wlRecord};
+}
+
+function buildWeeklySummary(weekKey) {
+  const d = buildWeekly(weekKey);
+  if (!d.players.length) return weekKey + " - No votes yet.";
+  const mvp = d.players[0];
+  return "Weekly Summary - "+weekKey+"\nMVP: "+mvp.name+" ("+mvp.avg+" stars)\nResult: "+d.matchResult+"\nVoters: "+d.totalVoters+"/"+d.expectedVoters+"\n\n"+d.players.map((p,i) => (i+1)+". "+p.name+" - "+p.avg).join("\n");
+}
+
+function setupAll() { setupSheets(); setupWebhook(); Logger.log("Setup complete!"); }
