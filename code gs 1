@@ -106,6 +106,10 @@ function doPost(e) {
       handleTelegramMessage(body.message);
       return ContentService.createTextOutput(JSON.stringify({ok:true})).setMimeType(ContentService.MimeType.JSON);
     }
+    if (body.action === "forceReveal") {
+  const result = handleReveal(body.pin);
+  return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+}
     if (body.voter && body.ratings) {
       if (hasAlreadyVoted(body.voter, body.weekKey)) {
         return ContentService.createTextOutput(JSON.stringify({
@@ -293,6 +297,7 @@ function doGet(e) {
   else if (action === "teams") data = getThisWeekTeams();
   else if (action === "playerdata") data = buildPlayerData(e.parameter.name);
   else if (action === "standings") data = buildStandings();
+  else if (action === "reveal") data = handleReveal(e.parameter.pin);
   else data = buildWeekly(getWeekKey());
   return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
 }
@@ -534,6 +539,24 @@ function buildWeeklySummary(weekKey) {
   if (!d.players.length) return weekKey + " - No votes yet.";
   const mvp = d.players[0];
   return "Weekly Summary - "+weekKey+"\nMVP: "+mvp.name+" ("+mvp.avg+" stars)\nResult: "+d.matchResult+"\nVoters: "+d.totalVoters+"/"+d.expectedVoters+"\n\n"+d.players.map((p,i) => (i+1)+". "+p.name+" - "+p.avg).join("\n");
+}
+
+function handleReveal(pin) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const config = ss.getSheetByName("Config");
+    if (!config) return {success: false, message: "Config not found."};
+    const rows = config.getDataRange().getValues();
+    const pinRow = rows.find(r => r[0] === "dashboard_pin");
+    if (!pinRow) return {success: false, message: "PIN not configured."};
+    const correctPin = String(pinRow[1]).trim();
+    if (String(pin).trim() === correctPin) {
+      return {success: true, revealed: true};
+    }
+    return {success: false, message: "Incorrect PIN."};
+  } catch(e) {
+    return {success: false, message: "Could not reveal."};
+  }
 }
 
 function setupAll() { setupSheets(); setupWebhook(); Logger.log("Setup complete!"); }
