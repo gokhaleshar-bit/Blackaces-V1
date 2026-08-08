@@ -449,6 +449,16 @@ main{padding-top:20px;}
 </style>
 </head>
 <body>
+<div id="pin-gate">
+  <div id="pin-card">
+    <div style="font-size:32px;margin-bottom:16px;">🔒</div>
+    <div style="font-family:'Fraunces',serif;font-size:21px;font-weight:700;color:#ffd166;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;">Black Aces FC</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4a6080;margin-bottom:28px;">Enter PIN to access the dashboard</div>
+    <input id="pin-input" type="password" inputmode="numeric" maxlength="4" placeholder="····" autocomplete="off" autofocus/>
+    <div id="pin-err"></div>
+    <button id="pin-btn">Unlock</button>
+  </div>
+</div>  
 <div id="dashboardWrap">
 <div class="hero">
 <div class="hero-inner">
