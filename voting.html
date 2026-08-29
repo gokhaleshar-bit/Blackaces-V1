@@ -37,6 +37,7 @@
   .stars{display:flex;gap:6px;}
   .star{width:36px;height:36px;border-radius:8px;background:var(--surface2);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:all .15s;color:var(--muted);}
   .star:hover,.star.active{background:rgba(245,158,11,.15);border-color:var(--yellow);color:var(--yellow);transform:scale(1.1);}
+  .half-star{width:28px;font-size:13px;opacity:0.85;}
   .star-label{font-size:11px;color:var(--muted);margin-top:6px;height:14px;}
   .played-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:28px;}
   .played-btn{padding:10px 12px;border-radius:9px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;text-align:left;display:flex;align-items:center;gap:8px;}
@@ -112,7 +113,7 @@
 
 <script>
 const SCRIPT_URL = "https://summer-darkness-e6f1.gokhaleshar.workers.dev";
-const STAR_LABELS = ["","Poor","Below Avg","Average","Good","Outstanding"];
+const STAR_LABELS = {"1":"Poor","1.5":"Poor+","2":"Below Avg","2.5":"Below Avg+","3":"Average","3.5":"Average+","4":"Good","4.5":"Good+","5":"Outstanding"};
 
 let PLAYERS = [];
 let TEAMS = null;
@@ -245,7 +246,11 @@ function goToStep3() {
     card.innerHTML =
       '<div class="player-name">' + p.name + '<span class="player-pos">' + p.pos + '</span>' + teamTag + '</div>' +
       '<div class="stars" id="stars_' + idx + '">' +
-      [1,2,3,4,5].map(v => '<div class="star" onclick="rate(' + idx + ',' + v + ',this)">' + v + '</div>').join("") +
+      [1,1.5,2,2.5,3,3.5,4,4.5,5].map(v => {
+        const isHalf = v % 1 !== 0;
+        const label = isHalf ? '½' : '★';
+        return '<div class="star' + (isHalf ? ' half-star' : '') + '" onclick="rate(' + idx + ',' + v + ',this)" data-val="' + v + '">' + label + '</div>';
+      }).join("") +
       '</div>' +
       '<div class="star-label" id="label_' + idx + '">Tap to rate</div>';
     list.appendChild(card);
@@ -255,8 +260,11 @@ function goToStep3() {
 
 function rate(playerIdx, value, star) {
   ratings[playerIdx] = value;
-  document.querySelectorAll("#stars_" + playerIdx + " .star").forEach((s,i) => s.classList.toggle("active", i < value));
-  document.getElementById("label_" + playerIdx).textContent = STAR_LABELS[value];
+  document.querySelectorAll("#stars_" + playerIdx + " .star").forEach(s => {
+    const sv = parseFloat(s.dataset.val);
+    s.classList.toggle("active", sv <= value);
+  });
+  document.getElementById("label_" + playerIdx).textContent = STAR_LABELS[String(value)] || value + "★";
   star.closest(".player-card").classList.add("rated");
   updateProgress();
   const toRate = activePlayers.filter(i => i !== currentVoter);
